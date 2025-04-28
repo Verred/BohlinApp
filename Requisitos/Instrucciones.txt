@@ -1,10 +1,17 @@
 1 Se require tener angular - Python - MySQL
+
 2. Instala las dependencias que encontraras en la api de python -> En windows usa pip install -r requirements
+(En caso de incompatibilidad instalar manualmente los paquetes como  pip install numpy==2.2.5 
+ pip install matplotlib==3.9.0)
+(Cambiar el conectionStrring del archivo .env a su base de datos mysql)
+
 3. Ejecuta el script para crear la tabla de datos
+
 4. Instala las dependencias de angular (npm install)
 5. Ejecuta la api ( python manage.py runserver  )
 6. ejecuta el front (ng serve)
 7. Si es la primera vez que ejecutas la aplicacion, para ver todas las funcionalidades necesitaras cargar los datos usa el modulo de opciones -> Subir datos y entrenar modelo y sube el archivo csv 
+
 
 
 ** En caso se requiera solo probar el back se incluye una colección postman
