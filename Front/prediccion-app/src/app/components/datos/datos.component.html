@@ -1,0 +1,182 @@
+<div class="datos-container">
+  <div class="header">
+    <h1>Datos de Accidentes</h1>
+    <div class="actions">
+      <button mat-raised-button color="primary" (click)="downloadCsv()">
+        <mat-icon>download</mat-icon>
+        Descargar CSV
+      </button>
+      <button mat-raised-button color="accent" (click)="loadData()" [disabled]="isLoading">
+        <mat-icon>refresh</mat-icon>
+        Actualizar
+      </button>
+    </div>
+  </div>
+
+  <mat-form-field class="filter-field">
+    <mat-label>Filtrar</mat-label>
+    <input matInput (keyup)="applyFilter($event)" placeholder="Buscar datos..." #input>
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
+
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Cargando datos...</p>
+  </div>
+
+  <div class="error-container" *ngIf="error">
+    <p>Ocurrió un error al cargar los datos.</p>
+    <button mat-raised-button color="warn" (click)="loadData()">Reintentar</button>
+  </div>
+
+  <div class="table-container" *ngIf="!isLoading && !error">
+    <table mat-table [dataSource]="filteredData" matSort class="mat-elevation-z8">
+      <!-- ID Column -->
+      <ng-container matColumnDef="id">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> ID </th>
+        <td mat-cell *matCellDef="let element"> {{element.id}} </td>
+      </ng-container>
+
+      <!-- Fecha Column -->
+      <ng-container matColumnDef="fecha">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Fecha </th>
+        <td mat-cell *matCellDef="let element"> {{element.fecha | date:'dd/MM/yyyy'}} </td>
+      </ng-container>
+
+      <!-- Hora Column -->
+      <ng-container matColumnDef="hora">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Hora </th>
+        <td mat-cell *matCellDef="let element"> {{element.hora}} </td>
+      </ng-container>
+
+      <!-- Clase Column -->
+      <ng-container matColumnDef="clase">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Clase </th>
+        <td mat-cell *matCellDef="let element"> {{element.clase}} </td>
+      </ng-container>
+
+      <!-- Vehículos Dañados Column -->
+      <ng-container matColumnDef="vehiculos_danados">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Vehículos Dañados </th>
+        <td mat-cell *matCellDef="let element"> {{element.vehiculos_danados}} </td>
+      </ng-container>
+
+      <!-- Distrito Column -->
+      <ng-container matColumnDef="distrito">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Distrito </th>
+        <td mat-cell *matCellDef="let element"> {{element.distrito}} </td>
+      </ng-container>
+
+      <!-- Zona Column -->
+      <ng-container matColumnDef="zona">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Zona </th>
+        <td mat-cell *matCellDef="let element"> {{element.zona}} </td>
+      </ng-container>
+
+      <!-- Tipo de Vía Column -->
+      <ng-container matColumnDef="tipo_via">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Tipo de Vía </th>
+        <td mat-cell *matCellDef="let element"> {{element.tipo_via}} </td>
+      </ng-container>
+
+      <!-- Red Vial Column -->
+      <ng-container matColumnDef="red_vial">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Red Vial </th>
+        <td mat-cell *matCellDef="let element"> {{element.red_vial}} </td>
+      </ng-container>
+
+      <!-- Ciclovía Column -->
+      <ng-container matColumnDef="ciclovia">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Ciclovía </th>
+        <td mat-cell *matCellDef="let element"> {{element.ciclovia ? 'Sí' : 'No'}} </td>
+      </ng-container>
+
+      <!-- Latitud Column -->
+      <ng-container matColumnDef="latitud">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Latitud </th>
+        <td mat-cell *matCellDef="let element"> {{element.latitud}} </td>
+      </ng-container>
+
+      <!-- Longitud Column -->
+      <ng-container matColumnDef="longitud">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Longitud </th>
+        <td mat-cell *matCellDef="let element"> {{element.longitud}} </td>
+      </ng-container>
+
+      <!-- Clima Column -->
+      <ng-container matColumnDef="clima">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Clima </th>
+        <td mat-cell *matCellDef="let element"> {{element.clima}} </td>
+      </ng-container>
+
+      <!-- Zonificación Column -->
+      <ng-container matColumnDef="zonificacion">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Zonificación </th>
+        <td mat-cell *matCellDef="let element"> {{element.zonificacion}} </td>
+      </ng-container>
+
+      <!-- Características de Vía Column -->
+      <ng-container matColumnDef="caracteristicas_via">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Características de Vía </th>
+        <td mat-cell *matCellDef="let element"> {{element.caracteristicas_via}} </td>
+      </ng-container>
+
+      <!-- Perfil de Vía Column -->
+      <ng-container matColumnDef="perfil_via">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Perfil de Vía </th>
+        <td mat-cell *matCellDef="let element"> {{element.perfil_via}} </td>
+      </ng-container>
+
+      <!-- Superficie de Calzada Column -->
+      <ng-container matColumnDef="superficie_calzada">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Superficie de Calzada </th>
+        <td mat-cell *matCellDef="let element"> {{element.superficie_calzada}} </td>
+      </ng-container>
+
+      <!-- Señalización Column -->
+      <ng-container matColumnDef="senalizacion">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Señalización </th>
+        <td mat-cell *matCellDef="let element"> {{element.senalizacion}} </td>
+      </ng-container>
+
+      <!-- Día de la Semana Column -->
+      <ng-container matColumnDef="dia_semana">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Día de la Semana </th>
+        <td mat-cell *matCellDef="let element"> {{element.dia_semana}} </td>
+      </ng-container>
+
+      <!-- Mes Column -->
+      <ng-container matColumnDef="mes">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Mes </th>
+        <td mat-cell *matCellDef="let element"> {{element.mes}} </td>
+      </ng-container>
+
+      <!-- Periodo del Día Column -->
+      <ng-container matColumnDef="periodo_dia">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Periodo del Día </th>
+        <td mat-cell *matCellDef="let element"> {{element.periodo_dia}} </td>
+      </ng-container>
+
+      <!-- Feriado Column -->
+      <ng-container matColumnDef="feriado">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Feriado </th>
+        <td mat-cell *matCellDef="let element"> {{element.feriado ? 'Sí' : 'No'}} </td>
+      </ng-container>
+
+      <!-- Accidente Column -->
+      <ng-container matColumnDef="accidente">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Accidente </th>
+        <td mat-cell *matCellDef="let element"> {{element.accidente ? 'Sí' : 'No'}} </td>
+      </ng-container>
+
+      <!-- Created At Column -->
+      <ng-container matColumnDef="created_at">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Creado </th>
+        <td mat-cell *matCellDef="let element"> {{element.created_at | date:'dd/MM/yyyy HH:mm'}} </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+  </div>
+</div>

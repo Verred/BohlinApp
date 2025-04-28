@@ -1,0 +1,149 @@
+<div class="opciones-container">
+  <h1>Opciones del Modelo</h1>
+  
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Cargando información del modelo...</p>
+  </div>
+  
+  <div class="error-container" *ngIf="error">
+    <p>Ocurrió un error al cargar la información del modelo.</p>
+    <button mat-raised-button color="warn" (click)="loadModelInfo()">Reintentar</button>
+  </div>
+  
+  <div class="content-container" *ngIf="!isLoading && !error">
+    <!-- Tarjeta de información del modelo -->
+    <mat-card class="info-card">
+      <mat-card-header>
+        <mat-card-title>Información del Modelo</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <div class="metric-label">Nombre del Modelo</div>
+            <div class="metric-value">{{modelInfo?.model_name || 'No disponible'}}</div>
+          </div>
+          
+          <div class="metric-item">
+            <div class="metric-label">Versión</div>
+            <div class="metric-value">{{modelInfo?.version || 'No disponible'}}</div>
+          </div>
+          
+          <div class="metric-item">
+            <div class="metric-label">Fecha de Entrenamiento</div>
+            <div class="metric-value">{{modelInfo?.training_date | date:'dd/MM/yyyy HH:mm'}}</div>
+          </div>
+          
+          <div class="metric-item">
+            <div class="metric-label">Registros de Datos</div>
+            <div class="metric-value">{{modelInfo?.data_records || 0}}</div>
+          </div>
+          
+          <div class="metric-item">
+            <div class="metric-label">Precisión (Accuracy)</div>
+            <div class="metric-value">{{modelInfo?.accuracy | percent:'1.2-2'}}</div>
+          </div>
+          
+          <div class="metric-item">
+            <div class="metric-label">Precisión (Precision)</div>
+            <div class="metric-value">{{modelInfo?.precision | percent:'1.2-2' }}</div>
+          </div>
+          
+          <div class="metric-item">
+            <div class="metric-label">Sensibilidad (Recall)</div>
+            <div class="metric-value">{{modelInfo?.recall | percent:'1.2-2' }}</div>
+          </div>
+          
+          <div class="metric-item">
+            <div class="metric-label">Puntuación F1</div>
+            <div class="metric-value">{{modelInfo?.f1_score | percent:'1.2-2'}}</div>
+          </div>
+          
+          <div class="metric-item status">
+            <div class="metric-label">Estado</div>
+            <div class="metric-value" [ngClass]="{'status-active': modelInfo?.status === 'Activo'}">
+              {{modelInfo?.status || 'Desconocido'}}
+            </div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+    
+    <!-- Tarjeta de gestión de datos y modelo -->
+    <mat-card class="management-card">
+      <mat-card-header>
+        <mat-card-title>Gestión de Datos y Modelo</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="management-section">
+          <h3>Subir Datos y Entrenar Modelo</h3>
+          <p>Sube un archivo CSV con nuevos datos para importarlos a la base de datos y entrenar el modelo automáticamente.</p>
+          
+          <div class="file-upload">
+            <button type="button" mat-raised-button (click)="fileInput.click()">
+              <mat-icon>upload_file</mat-icon>
+              Seleccionar Archivo
+            </button>
+            <input hidden type="file" #fileInput (change)="onFileSelected($event)" accept=".csv">
+            <span class="file-name" *ngIf="fileName">{{fileName}}</span>
+          </div>
+          
+          <button mat-raised-button color="primary" [disabled]="!selectedFile || isUploadingFile" (click)="uploadAndTrain()">
+            <mat-icon>cloud_upload</mat-icon>
+            Subir y Entrenar
+          </button>
+          
+          <div class="loading-upload" *ngIf="isUploadingFile">
+            <mat-spinner diameter="30"></mat-spinner>
+            <p>Procesando archivo y entrenando modelo...</p>
+          </div>
+        </div>
+        
+        <mat-divider></mat-divider>
+        
+        <div class="management-section danger-zone">
+          <h3>Zona de Peligro</h3>
+          <p>Las siguientes acciones pueden ser peligrosas y no se pueden deshacer.</p>
+          
+          <button mat-raised-button color="warn" (click)="deleteData()">
+            <mat-icon>delete_forever</mat-icon>
+            Eliminar Todos los Datos
+          </button>
+        </div>
+      </mat-card-content>
+    </mat-card>
+    
+    <!-- Tarjeta de endpoints de la API -->
+    <mat-card class="endpoints-card">
+      <mat-card-header>
+        <mat-card-title>Endpoints de la API</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p>A continuación se muestran los endpoints disponibles en la API:</p>
+        
+        <table mat-table [dataSource]="endpoints" class="endpoints-table">
+          <!-- Endpoint Column -->
+          <ng-container matColumnDef="endpoint">
+            <th mat-header-cell *matHeaderCellDef> Endpoint </th>
+            <td mat-cell *matCellDef="let element"> {{element.endpoint}} </td>
+          </ng-container>
+          
+          <!-- Methods Column -->
+          <ng-container matColumnDef="method">
+            <th mat-header-cell *matHeaderCellDef> Métodos </th>
+            <td mat-cell *matCellDef="let element"> {{element.methods}} </td>
+          </ng-container>
+          
+          <!-- Description Column -->
+          <ng-container matColumnDef="description">
+            <th mat-header-cell *matHeaderCellDef> Descripción </th>
+            <td mat-cell *matCellDef="let element"> {{element.description}} </td>
+          </ng-container>
+          
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

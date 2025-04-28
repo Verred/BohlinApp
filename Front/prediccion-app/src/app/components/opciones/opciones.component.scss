@@ -1,0 +1,149 @@
+.opciones-container {
+  padding: 20px;
+  
+  h1 {
+    margin-bottom: 20px;
+    color: #2c3e50;
+  }
+}
+
+.loading-container, .error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  
+  p {
+    margin: 20px 0;
+    color: #7f8c8d;
+  }
+}
+
+.error-container p {
+  color: #e74c3c;
+}
+
+.content-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  
+  @media (min-width: 992px) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.info-card, .management-card, .endpoints-card {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  
+  mat-card-title {
+    color: #2c3e50;
+    font-size: 1.25rem;
+  }
+}
+
+.endpoints-card {
+  grid-column: 1 / -1;
+}
+
+// Métricas del modelo
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+  
+  .metric-item {
+    padding: 12px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    
+    &.status {
+      grid-column: 1 / -1;
+      
+      .metric-value.status-active {
+        color: #27ae60;
+      }
+    }
+    
+    .metric-label {
+      font-size: 0.9rem;
+      color: #7f8c8d;
+      margin-bottom: 8px;
+    }
+    
+    .metric-value {
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: #2c3e50;
+    }
+  }
+}
+
+// Gestión de datos y modelo
+.management-section {
+  margin: 20px 0;
+  
+  h3 {
+    color: #3498db;
+    margin-bottom: 12px;
+  }
+  
+  p {
+    color: #7f8c8d;
+    margin-bottom: 16px;
+  }
+  
+  .file-upload {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    
+    .file-name {
+      color: #3498db;
+      font-weight: 500;
+    }
+  }
+  
+  &.danger-zone {
+    h3 {
+      color: #e74c3c;
+    }
+  }
+  
+  .loading-upload {
+    display: flex;
+    align-items: center;
+    margin-top: 16px;
+    
+    mat-spinner {
+      margin-right: 16px;
+    }
+    
+    p {
+      margin: 0;
+    }
+  }
+}
+
+// Tabla de endpoints
+.endpoints-table {
+  width: 100%;
+  margin-top: 16px;
+  
+  th {
+    font-weight: 500;
+    color: #3498db;
+  }
+  
+  td {
+    padding: 12px 8px;
+  }
+}
+
+mat-divider {
+  margin: 24px 0;
+}

@@ -1,0 +1,33 @@
+{
+    "accuracy": 0.9938650306748467,
+    "precision": 0.993873241012195,
+    "recall": 0.9938650306748467,
+    "f1_score": 0.9938649793613112,
+    "roc_auc": 0.9996487119437939,
+    "test_size": 0.2,
+    "training_samples": 1953,
+    "test_samples": 489,
+    "class_distribution": {
+        "1": 1221,
+        "0": 1221
+    },
+    "feature_importances": {
+        "HORA SINIESTRO": 0.006375426061691107,
+        "DISTRITO": 0.01943110574797848,
+        "ZONA": 0.008947616189623978,
+        "TIPO DE V\u00cdA": 0.18472507444505934,
+        "RED VIAL": 0.022294783197067347,
+        "EXISTE CICLOV\u00cdA": 0.05959103989011352,
+        "CONDICI\u00d3N CLIM\u00c1TICA": 0.23129794028774922,
+        "ZONIFICACI\u00d3N": 0.010096019343212055,
+        "CARACTER\u00cdSTICAS DE V\u00cdA": 0.1815118012473676,
+        "PERFIL LONGITUDINAL V\u00cdA": 0.019482143279780668,
+        "SUPERFICIE DE CALZADA": 0.16715182129763378,
+        "senalizacion": 0.02013719189160559,
+        "DIA_DE_LA_SEMANA": 0.00479271970176321,
+        "MES": 0.00780836345628064,
+        "PERIODO_DEL_DIA": 0.0032533306547873966,
+        "Feriado": 0.053103623308286045
+    },
+    "training_date": "2025-04-28 04:48:20"
+}

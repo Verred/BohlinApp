@@ -1,0 +1,84 @@
+.datos-container {
+  padding: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  
+  h1 {
+    margin: 0;
+    color: #2c3e50;
+  }
+  
+  .actions {
+    display: flex;
+    gap: 10px;
+  }
+}
+
+.filter-field {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  
+  p {
+    margin-top: 20px;
+    color: #7f8c8d;
+  }
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  
+  p {
+    margin-bottom: 20px;
+    color: #e74c3c;
+  }
+}
+
+.table-container {
+  overflow-x: auto;
+  
+  table {
+    width: 100%;
+  }
+  
+  .mat-column-id {
+    width: 60px;
+  }
+  
+  .mat-column-fecha {
+    width: 120px;
+  }
+  
+  .mat-column-numero_victimas {
+    width: 80px;
+    text-align: center;
+  }
+  
+  .no-data {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: #7f8c8d;
+    
+    mat-icon {
+      margin-right: 10px;
+    }
+  }
+}

@@ -1,0 +1,81 @@
+<div class="dashboard-container">
+  <h1 class="dashboard-title">Dashboard de Accidentes de Tránsito</h1>
+  
+  <div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Cargando datos...</p>
+  </div>
+  
+  <div *ngIf="error" class="error-container">
+    <p>Ocurrió un error al cargar los datos. Por favor, intenta nuevamente.</p>
+    <button class="btn-retry" (click)="loadData()">Reintentar</button>
+  </div>
+  
+  <div *ngIf="!loading && !error" class="dashboard-content">
+    <!-- Estadísticas generales -->
+    <div class="stats-container">
+      <div class="stat-card">
+        <h3>Total de accidentes</h3>
+        <p class="stat-value">{{totalAccidentes}}</p>
+      </div>
+      <div class="stat-card">
+        <h3>Último registro</h3>
+        <p class="stat-value">{{ultimoRegistro | date:'dd/MM/yyyy'}}</p>
+      </div>
+    </div>
+
+    <!-- Gráfico histórico de accidentes -->
+    <div class="chart-row">
+      <div class="chart-card full-width">
+        <h2>Histórico de Accidentes</h2>
+        <div class="chart-wrapper">
+          <canvas id="historicoAccidentesChart"></canvas>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Gráficos de distribución -->
+    <div class="chart-row">
+      <div class="chart-card">
+        <h2>Distribución por Tipo de Vía</h2>
+        <div class="chart-wrapper">
+          <canvas id="tipoViaChart"></canvas>
+        </div>
+      </div>
+      
+      <div class="chart-card">
+        <h2>Accidentes por Distrito</h2>
+        <div class="chart-wrapper">
+          <canvas id="distritoChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Factores de importancia del modelo -->
+    <div class="chart-row">
+      <div class="chart-card full-width">
+        <h2>Importancia de Variables del Modelo</h2>
+        <div class="chart-wrapper">
+          <canvas id="importanciaVariablesChart"></canvas>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Distribución por día y hora -->
+    <div class="chart-row">
+      <div class="chart-card">
+        <h2>Accidentes por Día</h2>
+        <div class="chart-wrapper">
+          <canvas id="accidentesPorDiaChart"></canvas>
+        </div>
+      </div>
+      
+      <div class="chart-card">
+        <h2>Accidentes por Hora</h2>
+        <div class="chart-wrapper">
+          <canvas id="accidentesPorHoraChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

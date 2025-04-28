@@ -1,0 +1,326 @@
+<div class="prediccion-container">
+  <h1>Predicción de Accidentes</h1>
+  
+  <mat-card class="main-card">
+    <mat-tab-group animationDuration="300ms">
+      <!-- Tab de Predicción Individual -->
+      <mat-tab label="Predicción Individual">
+        <div class="tab-content">
+          <div class="form-container">
+            <form [formGroup]="predictForm" (ngSubmit)="predict()">
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Hora del Siniestro</mat-label>
+                  <input matInput type="number" min="0" max="23" formControlName="HORA_SINIESTRO">
+                  <mat-error *ngIf="predictForm.get('HORA_SINIESTRO')?.hasError('required')">
+                    La hora es requerida
+                  </mat-error>
+                  <mat-error *ngIf="predictForm.get('HORA_SINIESTRO')?.hasError('min') || predictForm.get('HORA_SINIESTRO')?.hasError('max')">
+                    La hora debe estar entre 0 y 23
+                  </mat-error>
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline">
+                  <mat-label>Distrito</mat-label>
+                  <mat-select formControlName="DISTRITO">
+                    <mat-option *ngFor="let distrito of distritos" [value]="distrito.value">
+                      {{distrito.label}}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="predictForm.get('DISTRITO')?.hasError('required')">
+                    El distrito es requerido
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Zona</mat-label>
+                  <mat-select formControlName="ZONA">
+                    <mat-option *ngFor="let zona of zonas" [value]="zona.value">
+                      {{zona.label}}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="predictForm.get('ZONA')?.hasError('required')">
+                    La zona es requerida
+                  </mat-error>
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline">
+                  <mat-label>Tipo de Vía</mat-label>
+                  <mat-select formControlName="TIPO_DE_VIA">
+                    <mat-option *ngFor="let tipo of tiposVia" [value]="tipo.value">
+                      {{tipo.label}}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="predictForm.get('TIPO_DE_VIA')?.hasError('required')">
+                    El tipo de vía es requerido
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Red Vial</mat-label>
+                  <mat-select formControlName="RED_VIAL">
+                    <mat-option *ngFor="let red of redesViales" [value]="red.value">
+                      {{red.label}}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="predictForm.get('RED_VIAL')?.hasError('required')">
+                    La red vial es requerida
+                  </mat-error>
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline">
+                  <mat-label>¿Existe Ciclovía?</mat-label>
+                  <mat-select formControlName="EXISTE_CICLOVIA">
+                    <mat-option [value]="1">Sí</mat-option>
+                    <mat-option [value]="0">No</mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="predictForm.get('EXISTE_CICLOVIA')?.hasError('required')">
+                    Campo requerido
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Condición Climática</mat-label>
+                  <mat-select formControlName="CONDICION_CLIMATICA">
+                    <mat-option *ngFor="let clima of condicionesClimaticas" [value]="clima.value">
+                      {{clima.label}}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="predictForm.get('CONDICION_CLIMATICA')?.hasError('required')">
+                    La condición climática es requerida
+                  </mat-error>
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline">
+                  <mat-label>Zonificación</mat-label>
+                  <mat-select formControlName="ZONIFICACION">
+                    <mat-option *ngFor="let zonificacion of zonificaciones" [value]="zonificacion.value">
+                      {{zonificacion.label}}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="predictForm.get('ZONIFICACION')?.hasError('required')">
+                    La zonificación es requerida
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Características de la Vía</mat-label>
+                  <mat-select formControlName="CARACTERISTICAS_DE_VIA">
+                    <mat-option *ngFor="let caracteristica of caracteristicasVia" [value]="caracteristica.value">
+                      {{caracteristica.label}}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="predictForm.get('CARACTERISTICAS_DE_VIA')?.hasError('required')">
+                    Característica de vía requerida
+                  </mat-error>
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline">
+                  <mat-label>Perfil Longitudinal de la Vía</mat-label>
+                  <mat-select formControlName="PERFIL_LONGITUDINAL_VIA">
+                    <mat-option *ngFor="let perfil of perfilesLongitudinales" [value]="perfil.value">
+                      {{perfil.label}}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="predictForm.get('PERFIL_LONGITUDINAL_VIA')?.hasError('required')">
+                    El perfil longitudinal es requerido
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Superficie de Calzada</mat-label>
+                  <mat-select formControlName="SUPERFICIE_DE_CALZADA">
+                    <mat-option *ngFor="let superficie of superficiesCalzada" [value]="superficie.value">
+                      {{superficie.label}}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="predictForm.get('SUPERFICIE_DE_CALZADA')?.hasError('required')">
+                    La superficie de calzada es requerida
+                  </mat-error>
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline">
+                  <mat-label>Señalización</mat-label>
+                  <mat-select formControlName="SENALIZACION">
+                    <mat-option *ngFor="let senalizacion of senalizaciones" [value]="senalizacion.value">
+                      {{senalizacion.label}}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="predictForm.get('SENALIZACION')?.hasError('required')">
+                    La señalización es requerida
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Día de la Semana</mat-label>
+                  <mat-select formControlName="DIA_DE_LA_SEMANA">
+                    <mat-option *ngFor="let dia of diasSemana" [value]="dia.value">
+                      {{dia.label}}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="predictForm.get('DIA_DE_LA_SEMANA')?.hasError('required')">
+                    El día de la semana es requerido
+                  </mat-error>
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline">
+                  <mat-label>Mes</mat-label>
+                  <mat-select formControlName="MES">
+                    <mat-option *ngFor="let mes of meses" [value]="mes.value">
+                      {{mes.label}}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="predictForm.get('MES')?.hasError('required')">
+                    El mes es requerido
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Período del Día</mat-label>
+                  <mat-select formControlName="PERIODO_DEL_DIA">
+                    <mat-option *ngFor="let periodo of periodosDia" [value]="periodo.value">
+                      {{periodo.label}}
+                    </mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="predictForm.get('PERIODO_DEL_DIA')?.hasError('required')">
+                    El período del día es requerido
+                  </mat-error>
+                </mat-form-field>
+                
+                <mat-form-field appearance="outline">
+                  <mat-label>¿Es Feriado?</mat-label>
+                  <mat-select formControlName="FERIADO">
+                    <mat-option [value]="1">Sí</mat-option>
+                    <mat-option [value]="0">No</mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="predictForm.get('FERIADO')?.hasError('required')">
+                    Campo requerido
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              
+              <div class="form-actions">
+                <button type="button" mat-stroked-button (click)="resetForm()">
+                  <mat-icon>refresh</mat-icon>
+                  Limpiar
+                </button>
+                <button type="submit" mat-raised-button color="primary" [disabled]="isLoadingPredict">
+                  <mat-icon>psychology</mat-icon>
+                  Predecir
+                </button>
+              </div>
+            </form>
+          </div>
+          
+          <div class="result-container" *ngIf="isLoadingPredict">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>Procesando predicción...</p>
+          </div>
+          
+          <div class="result-container" *ngIf="prediction && !isLoadingPredict">
+            <mat-card class="result-card" [ngClass]="{'accident-card': prediction.is_accident, 'safe-card': !prediction.is_accident}">
+              <mat-card-header>
+                <mat-card-title>Resultado de la Predicción</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="result-item">
+                  <span class="label">Resultado:</span>
+                  <span class="value">{{prediction.is_accident ? 'Probabilidad de accidente' : 'Sin probabilidad de accidente'}}</span>
+                </div>
+                <div class="result-item" *ngIf="prediction.probability !== undefined">
+                  <span class="label">Probabilidad:</span>
+                  <span class="value">{{prediction.probability | percent:'1.2-2'}}</span>
+                </div>
+                <div class="result-item">
+                  <span class="label">Estado:</span>
+                  <span class="value">{{prediction.status}}</span>
+                </div>
+                <div class="alert-message" *ngIf="prediction.is_accident">
+                  <mat-icon color="warn">warning</mat-icon>
+                  <span>¡Alerta! Las condiciones ingresadas presentan alto riesgo de accidente.</span>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </div>
+      </mat-tab>
+      
+      <!-- Tab de Predicción por Lotes -->
+      <mat-tab label="Predicción por Lotes">
+        <div class="tab-content">
+          <div class="batch-container">
+            <div class="upload-section">
+              <p class="instructions">
+                Sube un archivo CSV con los datos para realizar predicciones por lotes.
+                El archivo debe contener las mismas columnas que el formulario de predicción individual.
+              </p>
+              
+              <div class="file-upload">
+                <button type="button" mat-raised-button (click)="fileInput.click()">
+                  <mat-icon>upload_file</mat-icon>
+                  Seleccionar Archivo
+                </button>
+                <input hidden type="file" #fileInput (change)="onFileSelected($event)" accept=".csv">
+                <span class="file-name" *ngIf="fileName">{{fileName}}</span>
+              </div>
+              
+              <button mat-raised-button color="primary" [disabled]="!batchFile || isLoadingBatch" (click)="batchPredict()">
+                <mat-icon>batch_prediction</mat-icon>
+                Procesar Archivo
+              </button>
+              
+              <div class="loading-batch" *ngIf="isLoadingBatch">
+                <mat-spinner diameter="40"></mat-spinner>
+                <p>Procesando archivo...</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+      
+      <!-- Tab de Entrenamiento -->
+      <mat-tab label="Entrenamiento del Modelo">
+        <div class="tab-content">
+          <div class="train-container">
+            <mat-card class="info-card">
+              <mat-card-header>
+                <mat-card-title>Entrenamiento del Modelo</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <p>
+                  En esta sección puedes reentrenar el modelo con los datos actuales de la base de datos.
+                  Esto te permitirá mejorar la precisión del modelo a medida que se recopilen más datos.
+                </p>
+              </mat-card-content>
+              <mat-card-actions>
+                <button mat-raised-button color="accent" [disabled]="isLoadingTrain" (click)="trainModel()">
+                  <mat-icon>model_training</mat-icon>
+                  Entrenar Modelo
+                </button>
+              </mat-card-actions>
+            </mat-card>
+            
+            <div class="loading-train" *ngIf="isLoadingTrain">
+              <mat-spinner diameter="40"></mat-spinner>
+              <p>Entrenando modelo...</p>
+            </div>
+          </div>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </mat-card>
+</div>

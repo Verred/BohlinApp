@@ -1,0 +1,94 @@
+/* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+body {
+  background-color: #f5f7fa;
+  color: #333;
+  min-height: 100vh;
+}
+
+/* Estilos para snackbars */
+.success-snackbar {
+  background: #4CAF50;
+  color: white;
+}
+
+.error-snackbar {
+  background: #F44336;
+  color: white;
+}
+
+.info-snackbar {
+  background-color: #2196f3;
+  color: white;
+}
+
+/* Estilos globales adicionales */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* Ajustes globales para Material */
+.mat-mdc-card {
+  margin-bottom: 16px;
+}
+
+.mat-mdc-snack-bar-container .mdc-snackbar__surface {
+  border-radius: 4px !important;
+}
+
+.no-data-message {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  font-size: 16px;
+  color: #7f8c8d;
+}
+
+/* Contenedor principal para layouts */
+.page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Estilos para títulos de página */
+.page-title {
+  margin-bottom: 24px;
+  color: #2c3e50;
+  font-weight: 500;
+  font-size: 1.8rem;
+}
+
+/* Estilos para tablas */
+.table-container {
+  overflow-x: auto;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Asegurarse que los botones con iconos estén alineados */
+.mat-mdc-button-base .mat-icon {
+  margin-right: 8px;
+  vertical-align: middle;
+}
