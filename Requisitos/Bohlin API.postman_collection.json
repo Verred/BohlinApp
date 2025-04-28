@@ -1,0 +1,226 @@
+{
+	"info": {
+		"_postman_id": "354d9f76-881f-4c48-b61f-384d529f01ed",
+		"name": "Bohlin API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "40437207"
+	},
+	"item": [
+		{
+			"name": "Predict Array",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\"values\": [14, 2, 1, 1, 1, 0 ,0, 1, 0, 0, 1, 0, 4, 1, 1, 0]}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/api/predict/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"predict",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Subir Archivo",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/C:/Users/Angel/Documents/Tesis/df_modelo_normalizado.csv"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8000/upload-and-train/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"upload-and-train",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Elimnar data",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/api/database-data/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"database-data",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET JSON",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/api/database-data/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"database-data",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GET CSV",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/api/download-csv/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"download-csv",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Entrenador Modelo",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/api/train-mysql/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"train-mysql",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Model Info",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8000/api/model-info/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"model-info",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Predecir Lote",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "file",
+					"file": {
+						"src": "/C:/Users/Angel/Documents/Tesis/df_modelo_normalizado.csv"
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8000/api/batch-predict/",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8000",
+					"path": [
+						"api",
+						"batch-predict",
+						""
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
