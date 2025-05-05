@@ -1,8 +1,8 @@
 1 Se require tener angular - Python - MySQL
 
 2. Instala las dependencias que encontraras en la api de python -> En windows usa pip install -r requirements
-(En caso de incompatibilidad instalar manualmente los paquetes como  pip install numpy==2.2.5 
- pip install matplotlib==3.9.0)
+(En caso de incompatibilidad instalar manualmente los paquetes como  pip install numpy 
+ pip install matplotlib)
 (Cambiar el conectionStrring del archivo .env a su base de datos mysql)
 
 3. Ejecuta el script para crear la tabla de datos
