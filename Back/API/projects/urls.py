@@ -14,4 +14,6 @@ urlpatterns = [
     path('api/batch-predict/', views.batch_predict, name='batch_predict'),
     path('api/download-csv/', views.download_csv, name='download_csv'),
     path('api/download-template/', views.download_template_csv, name='download_template_csv'),
+    path('api/upload-and-train/', views.upload_and_retrain, name='upload_and_retrain'), 
+    path('api/download-data-template/', views.download_data_template, name='download_data_template'),
 ] + router.urls
