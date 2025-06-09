@@ -21,6 +21,20 @@
                 </mat-form-field>
                 
                 <mat-form-field appearance="outline">
+                  <mat-label>Clase de Siniestro</mat-label>
+                  <mat-select formControlName="CLASE_SINIESTRO">
+                    <mat-option [value]="1">Tipo 1</mat-option>
+                    <mat-option [value]="2">Tipo 2</mat-option>
+                    <mat-option [value]="3">Tipo 3</mat-option>
+                  </mat-select>
+                  <mat-error *ngIf="predictForm.get('CLASE_SINIESTRO')?.hasError('required')">
+                    La clase de siniestro es requerida
+                  </mat-error>
+                </mat-form-field>
+              </div>
+              
+              <div class="form-row">
+                <mat-form-field appearance="outline">
                   <mat-label>Distrito</mat-label>
                   <mat-select formControlName="DISTRITO">
                     <mat-option *ngFor="let distrito of distritos" [value]="distrito.value">
@@ -31,9 +45,7 @@
                     El distrito es requerido
                   </mat-error>
                 </mat-form-field>
-              </div>
-              
-              <div class="form-row">
+                
                 <mat-form-field appearance="outline">
                   <mat-label>Zona</mat-label>
                   <mat-select formControlName="ZONA">
@@ -45,7 +57,9 @@
                     La zona es requerida
                   </mat-error>
                 </mat-form-field>
-                
+              </div>
+              
+              <div class="form-row">
                 <mat-form-field appearance="outline">
                   <mat-label>Tipo de Vía</mat-label>
                   <mat-select formControlName="TIPO_DE_VIA">
@@ -57,9 +71,7 @@
                     El tipo de vía es requerido
                   </mat-error>
                 </mat-form-field>
-              </div>
-              
-              <div class="form-row">
+                
                 <mat-form-field appearance="outline">
                   <mat-label>Red Vial</mat-label>
                   <mat-select formControlName="RED_VIAL">
@@ -71,7 +83,9 @@
                     La red vial es requerida
                   </mat-error>
                 </mat-form-field>
-                
+              </div>
+              
+              <div class="form-row">
                 <mat-form-field appearance="outline">
                   <mat-label>¿Existe Ciclovía?</mat-label>
                   <mat-select formControlName="EXISTE_CICLOVIA">
@@ -82,9 +96,7 @@
                     Campo requerido
                   </mat-error>
                 </mat-form-field>
-              </div>
-              
-              <div class="form-row">
+                
                 <mat-form-field appearance="outline">
                   <mat-label>Condición Climática</mat-label>
                   <mat-select formControlName="CONDICION_CLIMATICA">
@@ -96,7 +108,9 @@
                     La condición climática es requerida
                   </mat-error>
                 </mat-form-field>
-                
+              </div>
+              
+              <div class="form-row">
                 <mat-form-field appearance="outline">
                   <mat-label>Zonificación</mat-label>
                   <mat-select formControlName="ZONIFICACION">
@@ -108,9 +122,7 @@
                     La zonificación es requerida
                   </mat-error>
                 </mat-form-field>
-              </div>
-              
-              <div class="form-row">
+                
                 <mat-form-field appearance="outline">
                   <mat-label>Características de la Vía</mat-label>
                   <mat-select formControlName="CARACTERISTICAS_DE_VIA">
@@ -122,7 +134,9 @@
                     Característica de vía requerida
                   </mat-error>
                 </mat-form-field>
-                
+              </div>
+              
+              <div class="form-row">
                 <mat-form-field appearance="outline">
                   <mat-label>Perfil Longitudinal de la Vía</mat-label>
                   <mat-select formControlName="PERFIL_LONGITUDINAL_VIA">
@@ -134,9 +148,7 @@
                     El perfil longitudinal es requerido
                   </mat-error>
                 </mat-form-field>
-              </div>
-              
-              <div class="form-row">
+                
                 <mat-form-field appearance="outline">
                   <mat-label>Superficie de Calzada</mat-label>
                   <mat-select formControlName="SUPERFICIE_DE_CALZADA">
@@ -148,7 +160,9 @@
                     La superficie de calzada es requerida
                   </mat-error>
                 </mat-form-field>
-                
+              </div>
+              
+              <div class="form-row">
                 <mat-form-field appearance="outline">
                   <mat-label>Señalización</mat-label>
                   <mat-select formControlName="SENALIZACION">
@@ -160,9 +174,7 @@
                     La señalización es requerida
                   </mat-error>
                 </mat-form-field>
-              </div>
-              
-              <div class="form-row">
+                
                 <mat-form-field appearance="outline">
                   <mat-label>Día de la Semana</mat-label>
                   <mat-select formControlName="DIA_DE_LA_SEMANA">
@@ -174,7 +186,9 @@
                     El día de la semana es requerido
                   </mat-error>
                 </mat-form-field>
-                
+              </div>
+              
+              <div class="form-row">
                 <mat-form-field appearance="outline">
                   <mat-label>Mes</mat-label>
                   <mat-select formControlName="MES">
@@ -186,9 +200,7 @@
                     El mes es requerido
                   </mat-error>
                 </mat-form-field>
-              </div>
-              
-              <div class="form-row">
+                
                 <mat-form-field appearance="outline">
                   <mat-label>Período del Día</mat-label>
                   <mat-select formControlName="PERIODO_DEL_DIA">
@@ -200,7 +212,9 @@
                     El período del día es requerido
                   </mat-error>
                 </mat-form-field>
-                
+              </div>
+              
+              <div class="form-row">
                 <mat-form-field appearance="outline">
                   <mat-label>¿Es Feriado?</mat-label>
                   <mat-select formControlName="FERIADO">
@@ -249,6 +263,10 @@
                   <span class="label">Estado:</span>
                   <span class="value">{{prediction.status}}</span>
                 </div>
+                <div class="result-item">
+                  <span class="label">Nivel de Riesgo:</span>
+                  <span class="value">{{prediction.risk_level}}</span>
+                </div>
                 <div class="alert-message" *ngIf="prediction.is_accident">
                   <mat-icon color="warn">warning</mat-icon>
                   <span>¡Alerta! Las condiciones ingresadas presentan alto riesgo de accidente.</span>
@@ -270,22 +288,29 @@
               </p>
               
               <div class="file-upload">
-                <button type="button" mat-raised-button (click)="fileInput.click()">
+                <button type="button" mat-raised-button (click)="fileInput.click()" [disabled]="isLoadingBatch">
                   <mat-icon>upload_file</mat-icon>
-                  Seleccionar Archivo
+                  Seleccionar Archivo CSV
                 </button>
-                <input hidden type="file" #fileInput (change)="onFileSelected($event)" accept=".csv">
-                <span class="file-name" *ngIf="fileName">{{fileName}}</span>
+                <input hidden type="file" #fileInput (change)="onFileSelected($event)" accept=".csv" [disabled]="isLoadingBatch">
+                <span class="file-name" *ngIf="fileName">
+                  <mat-icon>description</mat-icon>
+                  {{fileName}}
+                  <button mat-icon-button (click)="clearFile()" [disabled]="isLoadingBatch" matTooltip="Quitar archivo">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                </span>
               </div>
               
               <button mat-raised-button color="primary" [disabled]="!batchFile || isLoadingBatch" (click)="batchPredict()">
                 <mat-icon>batch_prediction</mat-icon>
-                Procesar Archivo
+                Procesar y Descargar Resultados
               </button>
               
               <div class="loading-batch" *ngIf="isLoadingBatch">
                 <mat-spinner diameter="40"></mat-spinner>
-                <p>Procesando archivo...</p>
+                <p>Procesando archivo y generando predicciones...</p>
+                <p class="sub-text">Esto puede tomar algunos minutos dependiendo del tamaño del archivo</p>
               </div>
             </div>
           </div>

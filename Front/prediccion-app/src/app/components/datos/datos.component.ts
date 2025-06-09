@@ -9,7 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { DatosService } from '../../services/datos.service';
-import { PredictionData } from '../../models/prediction-data';
+import { AccidentData } from '../../models/prediction-data';
 
 @Component({
   selector: 'app-datos',
@@ -40,8 +40,6 @@ export class DatosComponent implements OnInit {
     'tipo_via',
     'red_vial',
     'ciclovia',
-    'latitud',
-    'longitud',
     'clima',
     'zonificacion',
     'caracteristicas_via',
@@ -56,8 +54,8 @@ export class DatosComponent implements OnInit {
     'created_at'
   ];
   
-  dataSource: PredictionData[] = [];
-  filteredData: PredictionData[] = [];
+  dataSource: AccidentData[] = [];
+  filteredData: AccidentData[] = [];
   isLoading = true;
   error = false;
   searchText = '';
@@ -74,8 +72,8 @@ export class DatosComponent implements OnInit {
 
     this.datosService.getAllData().subscribe({
       next: (response) => {
-        if (response.status === 'success' && response.data) {
-          this.dataSource = response.data.map((item: any) => ({
+        if (Array.isArray(response) && response.length > 0) {
+          this.dataSource = response.map((item: any) => ({
             id: item.id,
             fecha: item.FECHA_SINIESTRO,
             hora: item.HORA_SINIESTRO,
@@ -86,20 +84,18 @@ export class DatosComponent implements OnInit {
             tipo_via: item.TIPO_DE_VIA,
             red_vial: item.RED_VIAL,
             ciclovia: item.EXISTE_CICLOVIA,
-            latitud: item.COORDENADAS_LATITUD,
-            longitud: item.COORDENADAS_LONGITUD,
             clima: item.CONDICION_CLIMATICA,
             zonificacion: item.ZONIFICACION,
             caracteristicas_via: item.CARACTERISTICAS_DE_VIA,
             perfil_via: item.PERFIL_LONGITUDINAL_VIA,
             superficie_calzada: item.SUPERFICIE_DE_CALZADA,
-            senalizacion: item.senalizacion,
+            senalizacion: item.SENALIZACION,
             dia_semana: item.DIA_DE_LA_SEMANA,
             mes: item.MES,
             periodo_dia: item.PERIODO_DEL_DIA,
-            feriado: item.Feriado,
+            feriado: item.FERIADO,
             accidente: item.ACCIDENTE,
-            created_at: item.created_at
+            created_at: item.FECHA_INGRESO
           }));
           this.filteredData = [...this.dataSource];
         } else {
@@ -122,8 +118,7 @@ export class DatosComponent implements OnInit {
     if (filterValue) {
       this.filteredData = this.dataSource.filter((item) => {
         return Object.keys(item).some(key => {
-          // Convertir el valor a string para que podamos buscar en cualquier tipo de dato
-          const value = String(item[key as keyof PredictionData] || '').toLowerCase();
+          const value = String(item[key as keyof AccidentData] || '').toLowerCase();
           return value.includes(filterValue);
         });
       });

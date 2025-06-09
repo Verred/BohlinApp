@@ -7,16 +7,17 @@ import { saveAs } from 'file-saver';
   providedIn: 'root'
 })
 export class DatosService {
-  private baseUrl = 'http://localhost:8000/api';
+  private baseEndpoint = 'https://bohlin-api.onrender.com/api';
 
   constructor(private http: HttpClient) {}
 
   getAllData(): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/database-data/`);
+    console.log('Obteniendo datos de accidentes');
+    return this.http.get<any>(`${this.baseEndpoint}/siniestros/accidentes/`);
   }
 
   downloadCsv(): void {
-    this.http.get(`${this.baseUrl}/download-csv/`, { responseType: 'blob' }).subscribe({
+    this.http.get(`${this.baseEndpoint}/download-csv/`, { responseType: 'blob' }).subscribe({
       next: (blob) => {
         const date = new Date().toISOString().split('T')[0];
         const filename = `accidentes_data_${date}.csv`;

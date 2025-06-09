@@ -34,30 +34,48 @@ interface DatabaseData {
 }
 
 interface ModelInfo {
-  model_loaded: boolean;
-  expected_columns: string[];
-  num_features: number;
-  model_metrics: {
+  success: boolean;
+  model_info: {
+    model_exists: boolean;
+    model_size_bytes: number;
+    model_size_mb: number;
+    last_modified: string | null;
+    storage_path: string;
+    storage_type: string;
+    training_fields: string[];
+    target_field: string;
+    excluded_fields: string[];
+  };
+  metrics: {
+    timestamp: string;
+    training_date: string;
+    threshold: number;
     accuracy: number;
     precision: number;
     recall: number;
     f1_score: number;
     roc_auc: number;
-    test_size: number;
-    training_samples: number;
-    test_samples: number;
-    class_distribution: {
-      [key: string]: number;
+    confusion_matrix: {
+      true_negatives: number;
+      false_positives: number;
+      false_negatives: number;
+      true_positives: number;
     };
-    feature_importances: {
-      [key: string]: number;
+    dataset_info: {
+      total_samples: number;
+      training_samples: number;
+      test_samples: number;
+      features_count: number;
+      target_distribution: {
+        '0': number;
+        '1': number;
+      };
     };
-    training_date: string;
+    top_features: Array<{
+      feature: string;
+      importance: number;
+    }>;
   };
-  endpoints: {
-    [key: string]: string;
-  };
-  status: string;
 }
 
 @Component({
@@ -108,8 +126,21 @@ export class DashboardComponent implements OnInit {
     // Cargar datos de la base de datos
     this.apiService.getDatabaseData().subscribe({
       next: (response: any) => {
-        const data = response.data as DatabaseData[];
-        this.totalAccidentes = response.count || data.length;
+        // Verificar si response es un array directamente o un objeto con data
+        let data: DatabaseData[];
+        let count: number;
+        
+        if (Array.isArray(response)) {
+          // El backend devuelve directamente el array
+          data = response as DatabaseData[];
+          count = data.length;
+        } else {
+          // El backend devuelve un objeto con propiedades data y count
+          data = response.data as DatabaseData[];
+          count = response.count || data.length;
+        }
+        
+        this.totalAccidentes = count;
         
         // Encontrar la fecha del último registro
         if (data.length > 0) {
@@ -140,29 +171,25 @@ export class DashboardComponent implements OnInit {
   }
   
   createCharts(data: DatabaseData[], modelInfo?: ModelInfo): void {
-    // Asegúrate de limpiar todos los canvas previos
-    this.clearCharts();
-    
-    // Añadir un pequeño retraso para asegurar que el DOM está listo
     setTimeout(() => {
-      // Histórico de accidentes por mes/año
+      // Histórico de accidentes
       this.createHistoricoAccidentesChart(data);
       
-      // Distribución por tipo de vía
+      // Accidentes por tipo de vía
       this.createTipoViaChart(data);
       
-      // Distribución por distrito
+      // Accidentes por distrito
       this.createDistritoChart(data);
       
-      // Accidentes por día de la semana
+      // Accidentes por día
       this.createAccidentesPorDiaChart(data);
       
       // Accidentes por hora
       this.createAccidentesPorHoraChart(data);
       
       // Si tenemos info del modelo, mostramos la importancia de variables
-      if (modelInfo && modelInfo.model_metrics && modelInfo.model_metrics.feature_importances) {
-        this.createImportanciaVariablesChart(modelInfo.model_metrics.feature_importances);
+      if (modelInfo && modelInfo.metrics && modelInfo.metrics.top_features) {
+        this.createImportanciaVariablesChart(modelInfo.metrics.top_features);
       }
     }, 100);
   }
@@ -430,53 +457,53 @@ export class DashboardComponent implements OnInit {
     });
   }
   
-  createImportanciaVariablesChart(importancias: {[key: string]: number}): void {
-    // Ordenar importancias de mayor a menor
-    const importanciasOrdenadas = Object.entries(importancias)
-      .sort((a, b) => b[1] - a[1])
-      .reduce((obj, [key, value]) => {
-        obj[key] = value;
-        return obj;
-      }, {} as {[key: string]: number});
-    
+  createImportanciaVariablesChart(topFeatures: Array<{feature: string, importance: number}>): void {
     const ctx = document.getElementById('importanciaVariablesChart') as HTMLCanvasElement;
     if (!ctx) return;
+
+    // Tomar solo las top 10 características más importantes
+    const top10Features = topFeatures.slice(0, 10);
     
     new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: Object.keys(importanciasOrdenadas),
+        labels: top10Features.map(item => item.feature),
         datasets: [{
           label: 'Importancia',
-          data: Object.values(importanciasOrdenadas),
-          backgroundColor: '#9C27B0',
-          borderColor: '#7B1FA2',
+          data: top10Features.map(item => item.importance),
+          backgroundColor: 'rgba(156, 39, 176, 0.6)',
+          borderColor: 'rgba(156, 39, 176, 1)',
           borderWidth: 1
         }]
       },
       options: {
-        indexAxis: 'y',
         responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: false
+          },
+          title: {
+            display: true,
+            text: 'Variables más importantes del modelo'
+          }
+        },
         scales: {
-          x: {
+          y: {
             beginAtZero: true,
             title: {
               display: true,
-              text: 'Importancia Relativa'
+              text: 'Importancia'
             }
-          }
-        },
-        plugins: {
-          title: {
-            display: true,
-            text: 'Importancia de Variables en el Modelo Predictivo'
           },
-          tooltip: {
-            callbacks: {
-              label: function(context) {
-                const value = context.raw as number;
-                return `Importancia: ${(value * 100).toFixed(2)}%`;
-              }
+          x: {
+            title: {
+              display: true,
+              text: 'Variables'
+            },
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
             }
           }
         }

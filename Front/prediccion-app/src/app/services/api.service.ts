@@ -9,9 +9,7 @@ import { ApiModelResponse } from '../models/prediction-data';
   providedIn: 'root'
 })
 export class ApiService {
-  private baseUrl = 'http://localhost:8000/api';
-  private baseEndpoint = 'http://localhost:8000';
-
+  private baseEndpoint = 'https://bohlin-api.onrender.com/api';
 
   constructor(private http: HttpClient) { }
 
@@ -22,30 +20,32 @@ export class ApiService {
 
   // Obtener datos de la base de datos
   getDatabaseData(): Observable<PredictionData[]> {
-    return this.http.get<PredictionData[]>(`${this.baseUrl}/database-data/`);
+    console.log('Obtuvo dato');
+    return this.http.get<PredictionData[]>(`${this.baseEndpoint}/siniestros/accidentes/`);
   }
 
   // Eliminar todos los datos
   deleteAllData(): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/database-data/`);
+    return this.http.delete(`${this.baseEndpoint}/siniestros/delete_all/`);
   }
 
   // Descargar datos en CSV
   downloadCsv(): Observable<Blob> {
-    return this.http.get(`${this.baseUrl}/download-csv/`, {
+    return this.http.get(`${this.baseEndpoint}/download-csv/`, {
       responseType: 'blob'
     });
   }
 
   // Entrenar modelo
   trainModel(): Observable<any> {
-    return this.http.post(`${this.baseUrl}/train-mysql/`, {});
+    return this.http.post(`${this.baseEndpoint}/train-model/`, {});
   }
 
   // Subir CSV y entrenar
   uploadAndTrain(file: File): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('auto_retrain', 'true'); 
     return this.http.post(`${this.baseEndpoint}/upload-and-train/`, formData);
   }
 }
