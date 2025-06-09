@@ -7,7 +7,7 @@ import { saveAs } from 'file-saver';
   providedIn: 'root'
 })
 export class DatosService {
-  private baseEndpoint = 'http://localhost:8000/api';
+  private baseEndpoint = 'https://bohlin-api.onrender.com/api';
 
   constructor(private http: HttpClient) {}
 

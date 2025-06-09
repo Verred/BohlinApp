@@ -9,7 +9,7 @@ import { ApiModelResponse } from '../models/prediction-data';
   providedIn: 'root'
 })
 export class ApiService {
-  private baseEndpoint = 'http://localhost:8000/api';
+  private baseEndpoint = 'https://bohlin-api.onrender.com/api';
 
   constructor(private http: HttpClient) { }
 
