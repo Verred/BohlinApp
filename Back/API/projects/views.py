@@ -15,19 +15,14 @@ import io
 from django.db import transaction
 from datetime import datetime, date
 import traceback
+from .s3_utils import get_storage_handler
 
 @api_view(['POST'])
 def train_model(request):
     """
-    Entrena el modelo y guarda los resultados en la carpeta ml_model.
+    Entrena el modelo y guarda los resultados usando el storage configurado (local o S3).
     """
     try:
-        # Directorio donde guardar el modelo y métricas
-        output_dir = os.path.join(settings.BASE_DIR, 'projects', 'ml_model')
-        
-        # Crear directorio si no existe
-        os.makedirs(output_dir, exist_ok=True)
-        
         # Parámetros opcionales del request
         target_col = request.data.get('target_col', 'ACCIDENTE')
         model_filename = request.data.get('model_filename', 'modelo_accidentes.pkl')
@@ -36,7 +31,6 @@ def train_model(request):
         # Entrenar el modelo usando el modelo Siniestro
         result = train_accident_model_from_db(
             model_class=Siniestro,
-            output_dir=output_dir,
             target_col=target_col,
             model_filename=model_filename,
             metrics_filename=metrics_filename
@@ -49,6 +43,7 @@ def train_model(request):
                 'model_path': result.get('model_path'),
                 'metrics_path': result.get('metrics_path'),
                 'metrics': result['metrics'],
+                'storage_type': 'S3' if getattr(settings, 'USE_S3_STORAGE', False) else 'Local',
                 'training_info': {
                     'total_records': result['metrics'].get('total_samples', 'N/A'),
                     'features_used': Siniestro.TRAINING_FIELDS,
@@ -73,17 +68,20 @@ def train_model(request):
 @api_view(['POST'])
 def predict(request):
     """
-    Realiza predicciones usando el modelo entrenado.
-    Espera un array de datos con los campos necesarios para predicción.
+    Realiza predicciones usando el modelo entrenado desde el storage configurado.
     """
     try:
-        # Ruta del modelo guardado
-        model_path = os.path.join(settings.BASE_DIR, 'projects', 'ml_model', 'modelo_accidentes.pkl')
+        # Inicializar storage handler
+        storage = get_storage_handler()
         
-        if not os.path.exists(model_path):
+        # Verificar que el modelo existe
+        model_filename = request.data.get('model_filename', 'modelo_accidentes.pkl')
+        
+        if not storage.model_exists(model_filename):
             return Response({
                 'success': False,
-                'message': 'Modelo no encontrado. Primero entrene el modelo usando /api/train-model/'
+                'message': 'Modelo no encontrado. Primero entrene el modelo usando /api/train-model/',
+                'storage_type': 'S3' if getattr(settings, 'USE_S3_STORAGE', False) else 'Local'
             }, status=status.HTTP_404_NOT_FOUND)
         
         # Obtener datos del request
@@ -116,8 +114,8 @@ def predict(request):
                 'required_fields': Siniestro.TRAINING_FIELDS
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Cargar el modelo
-        model = joblib.load(model_path)
+        # Cargar el modelo desde storage
+        model = storage.load_model(model_filename)
         
         # Convertir datos a DataFrame con solo los campos de entrenamiento
         df_data = []
@@ -153,7 +151,8 @@ def predict(request):
                 'medium_risk': sum(1 for r in results if r['risk_level'] == 'Medio'),
                 'low_risk': sum(1 for r in results if r['risk_level'] == 'Bajo')
             },
-            'threshold_used': threshold
+            'threshold_used': threshold,
+            'storage_type': 'S3' if getattr(settings, 'USE_S3_STORAGE', False) else 'Local'
         }, status=status.HTTP_200_OK)
         
     except Exception as e:
@@ -166,17 +165,21 @@ def predict(request):
 @api_view(['GET'])
 def model_info(request):
     """
-    Obtiene la información y métricas del modelo entrenado.
+    Obtiene la información y métricas del modelo entrenado desde el storage configurado.
     """
     try:
-        # Ruta del archivo de métricas
-        metrics_path = os.path.join(settings.BASE_DIR, 'projects', 'ml_model', 'metricas_modelo.json')
-        model_path = os.path.join(settings.BASE_DIR, 'projects', 'ml_model', 'modelo_accidentes.pkl')
+        # Inicializar storage handler
+        storage = get_storage_handler()
         
-        if not os.path.exists(metrics_path):
+        # Nombres de archivos
+        metrics_filename = request.GET.get('metrics_filename', 'metricas_modelo.json')
+        model_filename = request.GET.get('model_filename', 'modelo_accidentes.pkl')
+        
+        if not storage.metrics_exist(metrics_filename):
             return Response({
                 'success': False,
                 'message': 'Métricas del modelo no encontradas. Primero entrene el modelo usando /api/train-model/',
+                'storage_type': 'S3' if getattr(settings, 'USE_S3_STORAGE', False) else 'Local',
                 'model_info': {
                     'required_fields_for_training': Siniestro.TRAINING_FIELDS + [Siniestro.TARGET_FIELD],
                     'required_fields_for_prediction': Siniestro.TRAINING_FIELDS,
@@ -185,22 +188,21 @@ def model_info(request):
                 }
             }, status=status.HTTP_404_NOT_FOUND)
         
-        # Leer métricas del archivo JSON
-        with open(metrics_path, 'r', encoding='utf-8') as f:
-            metrics = json.load(f)
+        # Leer métricas desde storage
+        metrics = storage.load_metrics(metrics_filename)
         
-        # Información adicional del modelo
-        model_exists = os.path.exists(model_path)
-        model_size = os.path.getsize(model_path) if model_exists else 0
+        # Información del modelo
+        model_info = storage.get_model_info(model_filename)
         
         return Response({
             'success': True,
             'model_info': {
-                'model_exists': model_exists,
-                'model_size_bytes': model_size,
-                'model_size_mb': round(model_size / (1024 * 1024), 2),
-                'metrics_file': metrics_path,
-                'model_file': model_path if model_exists else None,
+                'model_exists': model_info['exists'],
+                'model_size_bytes': model_info['size_bytes'],
+                'model_size_mb': model_info['size_mb'],
+                'last_modified': model_info.get('last_modified'),
+                'storage_path': model_info.get('s3_path') or model_info.get('local_path'),
+                'storage_type': 'S3' if getattr(settings, 'USE_S3_STORAGE', False) else 'Local',
                 'training_fields': Siniestro.TRAINING_FIELDS,
                 'target_field': Siniestro.TARGET_FIELD,
                 'excluded_fields': ['FECHA_SINIESTRO', 'FECHA_INGRESO', 'id']
@@ -214,26 +216,24 @@ def model_info(request):
             'message': 'Error al obtener información del modelo',
             'error': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+
 @api_view(['POST'])
 def batch_predict(request):
     """
     Realiza predicciones por lotes subiendo un archivo CSV.
-    Puede devolver JSON o CSV según el parámetro 'output_format'.
     """
     try:
-        # Debug: Imprimir información del request
-        print("=== DEBUG BATCH PREDICT ===")
-        print(f"Request method: {request.method}")
-        print(f"Request FILES: {request.FILES}")
+        # Inicializar storage handler
+        storage = get_storage_handler()
         
         # Verificar que el modelo existe
-        model_path = os.path.join(settings.BASE_DIR, 'projects', 'ml_model', 'modelo_accidentes.pkl')
+        model_filename = request.data.get('model_filename', 'modelo_accidentes.pkl')
         
-        if not os.path.exists(model_path):
+        if not storage.model_exists(model_filename):
             return Response({
                 'success': False,
-                'message': 'Modelo no encontrado. Primero entrene el modelo usando /api/train-model/'
+                'message': 'Modelo no encontrado. Primero entrene el modelo usando /api/train-model/',
+                'storage_type': 'S3' if getattr(settings, 'USE_S3_STORAGE', False) else 'Local'
             }, status=status.HTTP_404_NOT_FOUND)
         
         # Verificar que se subió un archivo
@@ -306,8 +306,8 @@ def batch_predict(request):
                 'null_fields': null_fields
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Cargar el modelo
-        model = joblib.load(model_path)
+        # Cargar el modelo desde storage
+        model = storage.load_model(model_filename)
         
         # Seleccionar columnas para predicción
         df_filtered = df[Siniestro.TRAINING_FIELDS]
@@ -393,7 +393,6 @@ def batch_predict(request):
             'error': str(e),
             'traceback': traceback.format_exc()
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 @api_view(['GET'])
 def download_csv(request):
@@ -813,14 +812,9 @@ def upload_and_retrain(request):
         if auto_retrain and records_created > 0:
             print("Iniciando reentrenamiento del modelo...")
             try:
-                # Directorio donde guardar el modelo y métricas
-                output_dir = os.path.join(settings.BASE_DIR, 'projects', 'ml_model')
-                os.makedirs(output_dir, exist_ok=True)
-                
-                # Reentrenar el modelo
+                # Reentrenar el modelo usando storage configurado
                 retrain_result = train_accident_model_from_db(
                     model_class=Siniestro,
-                    output_dir=output_dir,
                     target_col='ACCIDENTE',
                     model_filename='modelo_accidentes.pkl',
                     metrics_filename='metricas_modelo.json'

@@ -14,7 +14,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { PrediccionService } from '../../services/prediccion.service';
 import { ApiService } from '../../services/api.service';
-import { PredictionData } from '../../models/prediction-data';
+import { PredictionData, PredictionRequest, PredictionResponse } from '../../models/prediction-data';
+import { saveAs } from 'file-saver'; // Importar saveAs
 
 @Component({
   selector: 'app-prediccion',
@@ -45,8 +46,8 @@ export class PrediccionComponent {
   isLoadingPredict = false;
   isLoadingBatch = false;
   isLoadingTrain = false;
-  prediction: PredictionData | null = null;
-  trainResponse: any = null; // Nueva propiedad para almacenar la respuesta del entrenamiento
+  prediction: any = null; // Cambiar para manejar el nuevo formato de respuesta
+  trainResponse: any = null;
 
   distritos = [
     { label: 'Distrito 1', value: 1 },
@@ -154,6 +155,7 @@ export class PrediccionComponent {
   ) {
     this.predictForm = this.fb.group({
       HORA_SINIESTRO: [14, [Validators.required, Validators.min(0), Validators.max(23)]],
+      CLASE_SINIESTRO: [1, Validators.required], // Nuevo campo agregado
       DISTRITO: [2, Validators.required],
       ZONA: [1, Validators.required],
       TIPO_DE_VIA: [1, Validators.required],
@@ -191,6 +193,15 @@ export class PrediccionComponent {
     }
   }
 
+  clearFile(): void {
+    this.batchFile = null;
+    this.fileName = '';
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  }
+
   predict(): void {
     if (this.predictForm.invalid) {
       this.snackBar.open('Por favor completa todos los campos requeridos', 'Cerrar', {
@@ -202,47 +213,64 @@ export class PrediccionComponent {
 
     this.isLoadingPredict = true;
     
-    // Crear el array con los valores en el orden correcto
-    const valuesArray = [
-      this.predictForm.value.HORA_SINIESTRO,  // 'HORA SINIESTRO'
-      this.predictForm.value.DISTRITO,        // 'DISTRITO'
-      this.predictForm.value.ZONA,            // 'ZONA'
-      this.predictForm.value.TIPO_DE_VIA,     // 'TIPO DE VÍA'
-      this.predictForm.value.RED_VIAL,        // 'RED VIAL'
-      this.predictForm.value.EXISTE_CICLOVIA, // 'EXISTE CICLOVÍA'
-      this.predictForm.value.CONDICION_CLIMATICA, // 'CONDICIÓN CLIMÁTICA'
-      this.predictForm.value.ZONIFICACION,    // 'ZONIFICACIÓN'
-      this.predictForm.value.CARACTERISTICAS_DE_VIA, // 'CARACTERÍSTICAS DE VÍA'
-      this.predictForm.value.PERFIL_LONGITUDINAL_VIA, // 'PERFIL LONGITUDINAL VÍA'
-      this.predictForm.value.SUPERFICIE_DE_CALZADA, // 'SUPERFICIE DE CALZADA'
-      this.predictForm.value.SENALIZACION,    // 'senalizacion'
-      this.predictForm.value.DIA_DE_LA_SEMANA, // 'DIA_DE_LA_SEMANA'
-      this.predictForm.value.MES,             // 'MES'
-      this.predictForm.value.PERIODO_DEL_DIA, // 'PERIODO_DEL_DIA'
-      this.predictForm.value.FERIADO          // 'Feriado'
-    ];
-    
-    // Crear el objeto en formato { values: [...] }
-    const requestData = { values: valuesArray };
+    // Crear el objeto de datos en el nuevo formato
+    const requestData: PredictionRequest = {
+      data: [
+        {
+          HORA_SINIESTRO: this.predictForm.value.HORA_SINIESTRO,
+          CLASE_SINIESTRO: this.predictForm.value.CLASE_SINIESTRO,
+          CANTIDAD_DE_VEHICULOS_DANADOS: 2, // Valor fijo como solicitaste
+          DISTRITO: this.predictForm.value.DISTRITO,
+          ZONA: this.predictForm.value.ZONA,
+          TIPO_DE_VIA: this.predictForm.value.TIPO_DE_VIA,
+          RED_VIAL: this.predictForm.value.RED_VIAL,
+          EXISTE_CICLOVIA: this.predictForm.value.EXISTE_CICLOVIA,
+          CONDICION_CLIMATICA: this.predictForm.value.CONDICION_CLIMATICA,
+          ZONIFICACION: this.predictForm.value.ZONIFICACION,
+          CARACTERISTICAS_DE_VIA: this.predictForm.value.CARACTERISTICAS_DE_VIA,
+          PERFIL_LONGITUDINAL_VIA: this.predictForm.value.PERFIL_LONGITUDINAL_VIA,
+          SUPERFICIE_DE_CALZADA: this.predictForm.value.SUPERFICIE_DE_CALZADA,
+          SENALIZACION: this.predictForm.value.SENALIZACION,
+          DIA_DE_LA_SEMANA: this.predictForm.value.DIA_DE_LA_SEMANA,
+          MES: this.predictForm.value.MES,
+          PERIODO_DEL_DIA: this.predictForm.value.PERIODO_DEL_DIA,
+          FERIADO: this.predictForm.value.FERIADO
+        }
+      ],
+      threshold: 0.5 // Valor fijo como solicitaste
+    };
 
     this.prediccionService.predict(requestData).subscribe({
-      next: (result) => {
+      next: (result: PredictionResponse) => {
         console.log('Resultado recibido:', result);
-        this.prediction = result;
+        
+        // Extraer la primera predicción ya que solo enviamos un elemento
+        const firstPrediction = result.predictions[0];
+        
+        // Adaptar la respuesta al formato esperado por el template
+        this.prediction = {
+          prediction: firstPrediction.prediction,
+          probability: firstPrediction.probability,
+          is_accident: firstPrediction.accident_likely,
+          risk_level: firstPrediction.risk_level,
+          accident_likely: firstPrediction.accident_likely,
+          status: result.success ? 'success' : 'error'
+        };
+        
         this.isLoadingPredict = false;
         
         // Mostrar snackbar con el resultado
-        const message = result.is_accident ? 
-          `¡Alerta! Alta probabilidad de accidente (${((result.probability ?? 0) * 100).toFixed(2)}%)` :
-          `Baja probabilidad de accidente (${((result.probability ?? 0) * 100).toFixed(2)}%)`;
+        const message = firstPrediction.accident_likely ? 
+          `¡Alerta! Alta probabilidad de accidente (${(firstPrediction.probability * 100).toFixed(2)}%) - Riesgo: ${firstPrediction.risk_level}` :
+          `Baja probabilidad de accidente (${(firstPrediction.probability * 100).toFixed(2)}%) - Riesgo: ${firstPrediction.risk_level}`;
         
         this.snackBar.open(message, 'Cerrar', {
           duration: 5000,
-          panelClass: [result.is_accident ? 'warning-snackbar' : 'success-snackbar']
+          panelClass: [firstPrediction.accident_likely ? 'warning-snackbar' : 'success-snackbar']
         });
       },
       error: (err) => {
-        console.log("Error en la petición:", requestData); // Log para verificar el objeto enviado
+        console.log("Error en la petición:", requestData);
         console.error('Error al realizar predicción:', err);
         this.isLoadingPredict = false;
         this.snackBar.open('Error al realizar la predicción', 'Cerrar', {
@@ -265,30 +293,65 @@ export class PrediccionComponent {
     this.isLoadingBatch = true;
     this.prediccionService.batchPredict(this.batchFile).subscribe({
       next: (blob) => {
-        // Generar un nombre de archivo que incluya la fecha
-        const date = new Date().toISOString().split('T')[0];
-        const filename = `predicciones_${date}.csv`;
+        // Generar un nombre de archivo que incluya la fecha y hora
+        const now = new Date();
+        const date = now.toISOString().split('T')[0];
+        const time = now.toTimeString().split(' ')[0].replace(/:/g, '-');
+        const filename = `predicciones_lotes_${date}_${time}.csv`;
         
         // Descargar el archivo
-        //saveAs(blob, filename);
+        saveAs(blob, filename);
         
         this.isLoadingBatch = false;
-        this.snackBar.open('Predicciones completadas y descargadas', 'Cerrar', {
-          duration: 3000,
+        this.snackBar.open(`Predicciones completadas y descargadas como: ${filename}`, 'Cerrar', {
+          duration: 5000,
           panelClass: ['success-snackbar']
         });
         
         // Limpiar el archivo seleccionado
         this.batchFile = null;
         this.fileName = '';
+        
+        // Opcional: resetear el input file
+        const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+        if (fileInput) {
+          fileInput.value = '';
+        }
       },
       error: (err) => {
         console.error('Error al realizar predicciones por lotes:', err);
         this.isLoadingBatch = false;
-        this.snackBar.open('Error al procesar el archivo', 'Cerrar', {
-          duration: 3000,
-          panelClass: ['error-snackbar']
-        });
+        
+        // Mejorar el manejo de errores
+        let errorMessage = 'Error al procesar el archivo';
+        if (err.error instanceof Blob) {
+          // Si el error viene como blob, intentar leerlo
+          const reader = new FileReader();
+          reader.onload = () => {
+            try {
+              const errorData = JSON.parse(reader.result as string);
+              errorMessage = errorData.message || errorMessage;
+            } catch {
+              errorMessage = 'Error en el formato del archivo o en el servidor';
+            }
+            this.snackBar.open(errorMessage, 'Cerrar', {
+              duration: 5000,
+              panelClass: ['error-snackbar']
+            });
+          };
+          reader.readAsText(err.error);
+        } else if (err.error?.message) {
+          errorMessage = err.error.message;
+          this.snackBar.open(errorMessage, 'Cerrar', {
+            duration: 5000,
+            panelClass: ['error-snackbar']
+          });
+        } else {
+          this.snackBar.open(errorMessage, 'Cerrar', {
+            duration: 3000,
+            panelClass: ['error-snackbar']
+          });
+        }
       }
     });
   }
@@ -329,6 +392,7 @@ export class PrediccionComponent {
   resetForm(): void {
     this.predictForm.reset({
       HORA_SINIESTRO: 14,
+      CLASE_SINIESTRO: 1, // Nuevo campo agregado
       DISTRITO: 2,
       ZONA: 1,
       TIPO_DE_VIA: 1,

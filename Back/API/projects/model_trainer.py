@@ -22,6 +22,7 @@ from sklearn.metrics import (
 )
 from imblearn.over_sampling import SMOTE
 from collections import Counter
+from .s3_utils import get_storage_handler
 
 class AccidentPredictorAPI:
     def __init__(self):
@@ -38,6 +39,8 @@ class AccidentPredictorAPI:
         self.metrics = {}
         # Columnas excluidas del entrenamiento
         self.excluded_columns = ['FECHA_SINIESTRO', 'FECHA_INGRESO', 'id']
+        # Inicializar storage handler
+        self.storage = get_storage_handler()
     
     def load_data_from_model(self, model_class, filter_kwargs=None):
         """Carga datos desde un modelo de Django excluyendo columnas específicas.
@@ -274,48 +277,40 @@ class AccidentPredictorAPI:
         
         return self
     
-    def save_metrics_json(self, metrics_path):
-        """Guarda las métricas del modelo en formato JSON.
+    def save_metrics_json(self, metrics_filename):
+        """Guarda las métricas del modelo usando el storage configurado.
         
         Args:
-            metrics_path (str): Ruta donde guardar las métricas.
+            metrics_filename (str): Nombre del archivo de métricas.
             
         Returns:
-            str: Ruta del archivo de métricas guardado.
+            str: Ruta donde se guardaron las métricas.
         """
         if not self.metrics:
             raise ValueError("Primero debe evaluar el modelo")
         
-        # Asegurar que el directorio existe
-        os.makedirs(os.path.dirname(metrics_path), exist_ok=True)
-        
-        # Guardar métricas en JSON
-        with open(metrics_path, 'w', encoding='utf-8') as f:
-            json.dump(self.metrics, f, indent=2, ensure_ascii=False)
-        
-        print(f"\nMétricas guardadas en: {metrics_path}")
-        return metrics_path
+        # Guardar métricas usando el storage handler
+        saved_path = self.storage.save_metrics(self.metrics, metrics_filename)
+        print(f"\nMétricas guardadas en: {saved_path}")
+        return saved_path
     
-    def save_model(self, model_path):
-        """Guarda el modelo entrenado.
+    def save_model(self, model_filename):
+        """Guarda el modelo entrenado usando el storage configurado.
         
         Args:
-            model_path (str): Ruta donde guardar el modelo.
+            model_filename (str): Nombre del archivo del modelo.
             
         Returns:
-            str: Ruta del modelo guardado.
+            str: Ruta donde se guardó el modelo.
         """
         if self.rf_model is None:
             raise ValueError("Primero debe entrenar el modelo")
         
-        # Asegurar que el directorio existe
-        os.makedirs(os.path.dirname(model_path), exist_ok=True)
+        # Guardar el modelo usando el storage handler
+        saved_path = self.storage.save_model(self.rf_model, model_filename)
+        print(f"\nModelo guardado en: {saved_path}")
         
-        # Guardar el modelo
-        joblib.dump(self.rf_model, model_path)
-        print(f"\nModelo guardado en: {model_path}")
-        
-        return model_path
+        return saved_path
     
     def predict_new_data(self, new_data, threshold=0.5):
         """Realiza predicciones para nuevos datos.
@@ -353,14 +348,14 @@ class AccidentPredictorAPI:
         return self.metrics
     
     def train_and_evaluate(self, queryset_or_model, target_col='ACCIDENTE', 
-                          model_path=None, metrics_path=None, filter_kwargs=None):
+                          model_filename=None, metrics_filename=None, filter_kwargs=None):
         """Método completo para entrenar y evaluar el modelo desde la API.
         
         Args:
             queryset_or_model: QuerySet de Django o clase del modelo.
             target_col (str): Nombre de la columna objetivo.
-            model_path (str, optional): Ruta donde guardar el modelo.
-            metrics_path (str, optional): Ruta donde guardar las métricas.
+            model_filename (str, optional): Nombre del archivo del modelo.
+            metrics_filename (str, optional): Nombre del archivo de métricas.
             filter_kwargs (dict, optional): Filtros para la consulta.
             
         Returns:
@@ -385,14 +380,14 @@ class AccidentPredictorAPI:
                 'message': 'Modelo entrenado y evaluado exitosamente'
             }
             
-            # Guardar modelo si se especifica la ruta
-            if model_path:
-                saved_model_path = self.save_model(model_path)
+            # Guardar modelo si se especifica el filename
+            if model_filename:
+                saved_model_path = self.save_model(model_filename)
                 result['model_path'] = saved_model_path
             
-            # Guardar métricas si se especifica la ruta
-            if metrics_path:
-                saved_metrics_path = self.save_metrics_json(metrics_path)
+            # Guardar métricas si se especifica el filename
+            if metrics_filename:
+                saved_metrics_path = self.save_metrics_json(metrics_filename)
                 result['metrics_path'] = saved_metrics_path
             
             return result
@@ -404,8 +399,8 @@ class AccidentPredictorAPI:
                 'message': 'Error durante el entrenamiento del modelo'
             }
 
-# Función de utilidad actualizada para manejar exclusión de columnas
-def train_accident_model_from_db(model_class, output_dir, target_col='ACCIDENTE', 
+# Función de utilidad actualizada
+def train_accident_model_from_db(model_class, target_col='ACCIDENTE', 
                                 filter_kwargs=None, model_filename='modelo_accidentes.pkl',
                                 metrics_filename='metricas_modelo.json',
                                 excluded_columns=None):
@@ -413,7 +408,6 @@ def train_accident_model_from_db(model_class, output_dir, target_col='ACCIDENTE'
     
     Args:
         model_class: Clase del modelo Django con los datos.
-        output_dir (str): Directorio donde guardar el modelo y métricas.
         target_col (str): Nombre de la columna objetivo.
         filter_kwargs (dict, optional): Filtros para la consulta.
         model_filename (str): Nombre del archivo del modelo.
@@ -429,13 +423,10 @@ def train_accident_model_from_db(model_class, output_dir, target_col='ACCIDENTE'
     if excluded_columns:
         predictor.excluded_columns.extend(excluded_columns)
     
-    model_path = os.path.join(output_dir, model_filename)
-    metrics_path = os.path.join(output_dir, metrics_filename)
-    
     return predictor.train_and_evaluate(
         queryset_or_model=model_class,
         target_col=target_col,
-        model_path=model_path,
-        metrics_path=metrics_path,
+        model_filename=model_filename,
+        metrics_filename=metrics_filename,
         filter_kwargs=filter_kwargs
     )

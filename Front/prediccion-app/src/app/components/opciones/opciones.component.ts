@@ -57,13 +57,13 @@ export class OpcionesComponent implements OnInit {
         this.modelInfo = {
           model_name: 'Modelo de Predicción de Siniestros',
           version: '1.0',
-          training_date: new Date(response.model_metrics.training_date),
-          data_records: response.model_metrics.training_samples + response.model_metrics.test_samples,
-          accuracy: response.model_metrics.accuracy,
-          precision: response.model_metrics.precision,
-          recall: response.model_metrics.recall,
-          f1_score: response.model_metrics.f1_score,
-          status: response.model_loaded ? 'Activo' : 'Inactivo'
+          training_date: new Date(response.metrics.training_date),
+          data_records: response.metrics.dataset_info.total_samples,
+          accuracy: response.metrics.accuracy,
+          precision: response.metrics.precision,
+          recall: response.metrics.recall,
+          f1_score: response.metrics.f1_score,
+          status: response.model_info.model_exists ? 'Activo' : 'Inactivo'
         };
         
         // Preparar los endpoints para mostrar en la tabla
