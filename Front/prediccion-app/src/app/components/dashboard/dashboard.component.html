@@ -1,5 +1,30 @@
 <div class="dashboard-container">
-  <h1 class="dashboard-title">Dashboard de Accidentes de Tránsito</h1>
+  <div class="dashboard-header">
+    <h1 class="dashboard-title">Dashboard de Accidentes de Tránsito</h1>
+    <div class="header-buttons">
+      <button 
+        mat-raised-button 
+        color="primary" 
+        (click)="generatePdfReport()" 
+        [disabled]="loading || isGeneratingReport"
+        class="report-button">
+        <mat-icon>picture_as_pdf</mat-icon>
+        <span *ngIf="!isGeneratingReport">Generar Reporte General</span>
+        <span *ngIf="isGeneratingReport">Generando...</span>
+      </button>
+      
+      <button 
+        mat-raised-button 
+        color="accent" 
+        (click)="generateDistrictRiskReport()" 
+        [disabled]="loading || isGeneratingDistrictReport"
+        class="report-button district-report">
+        <mat-icon>location_on</mat-icon>
+        <span *ngIf="!isGeneratingDistrictReport">Reporte Zonas de Riesgo</span>
+        <span *ngIf="isGeneratingDistrictReport">Generando...</span>
+      </button>
+    </div>
+  </div>
   
   <div *ngIf="loading" class="loading-container">
     <div class="spinner"></div>

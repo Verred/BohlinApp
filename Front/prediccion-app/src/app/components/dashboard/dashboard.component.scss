@@ -4,11 +4,57 @@
   margin: 0 auto;
 }
 
-.dashboard-title {
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 25px;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 15px;
+  }
+}
+
+.dashboard-title {
+  margin: 0;
   color: #333;
-  text-align: center;
   font-size: 28px;
+  
+  @media (max-width: 768px) {
+    text-align: center;
+    font-size: 24px;
+  }
+}
+
+.header-buttons {
+  display: flex;
+  gap: 10px;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    width: 100%;
+  }
+}
+
+.report-button {
+  min-width: 200px;
+  
+  mat-icon {
+    margin-right: 8px;
+  }
+  
+  &:disabled {
+    opacity: 0.6;
+  }
+  
+  &.district-report {
+    background-color: #FF6B35 !important;
+    
+    &:hover:not(:disabled) {
+      background-color: #E55A2B !important;
+    }
+  }
 }
 
 .loading-container {

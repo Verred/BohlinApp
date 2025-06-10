@@ -1,7 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { ApiService } from '../../services/api.service';
 import { Chart, registerables } from 'chart.js';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 // Registrar los módulos necesarios de Chart.js
 Chart.register(...registerables);
@@ -78,10 +83,17 @@ interface ModelInfo {
   };
 }
 
+// Agregar esta interfaz después de las otras interfaces
+interface DistritoRiesgo {
+  nombre: string;
+  accidentes: number;
+  porcentaje: number;
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatButtonModule, MatIconModule, MatSnackBarModule],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
@@ -90,6 +102,8 @@ export class DashboardComponent implements OnInit {
   error = false;
   totalAccidentes = 0;
   ultimoRegistro: Date | null = null;
+  isGeneratingReport = false;
+  isGeneratingDistrictReport = false; // Nueva propiedad para el reporte de distritos
   
   // Mapeo de códigos a nombres para una mejor visualización
   tipoViaNombres: { [key: number]: string } = {
@@ -113,7 +127,10 @@ export class DashboardComponent implements OnInit {
   
   diasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
   
-  constructor(private apiService: ApiService) {}
+  constructor(
+    private apiService: ApiService,
+    private snackBar: MatSnackBar
+  ) {}
   
   ngOnInit(): void {
     this.loadData();
@@ -510,4 +527,424 @@ export class DashboardComponent implements OnInit {
       }
     });
   }
+
+  async generatePdfReport(): Promise<void> {
+    // Verificar si hay errores o no hay datos
+    if (this.error || this.totalAccidentes === 0) {
+      this.snackBar.open('Generación de reporte en blanco o error en los datos', 'Cerrar', {
+        duration: 5000,
+        panelClass: ['warning-snackbar']
+      });
+      return;
+    }
+
+    this.isGeneratingReport = true;
+    
+    try {
+      // Obtener el contenedor del dashboard
+      const dashboardElement = document.querySelector('.dashboard-content') as HTMLElement;
+      
+      if (!dashboardElement) {
+        throw new Error('No se encontró el contenido del dashboard');
+      }
+
+      // Mostrar mensaje de progreso
+      this.snackBar.open('Generando reporte PDF...', '', {
+        duration: 2000,
+        panelClass: ['info-snackbar']
+      });
+
+      // Configurar html2canvas para mejor calidad
+      const canvas = await html2canvas(dashboardElement, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        width: dashboardElement.scrollWidth,
+        height: dashboardElement.scrollHeight
+      });
+
+      // Crear el PDF
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      // Calcular dimensiones para ajustar la imagen al PDF
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = pdfWidth - 20; // Margen de 10mm a cada lado
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      // Agregar título
+      const currentDate = new Date().toLocaleDateString('es-ES');
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Dashboard de Accidentes de Tránsito', pdfWidth / 2, 15, { align: 'center' });
+      
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Fecha de generación: ${currentDate}`, pdfWidth / 2, 25, { align: 'center' });
+      pdf.text(`Total de accidentes: ${this.totalAccidentes}`, pdfWidth / 2, 32, { align: 'center' });
+
+      // Si la imagen es muy alta, dividirla en páginas
+      let yPosition = 40;
+      let remainingHeight = imgHeight;
+      let sourceY = 0;
+
+      while (remainingHeight > 0) {
+        const pageHeight = pdfHeight - yPosition - 10; // Margen inferior
+        const heightToAdd = Math.min(remainingHeight, pageHeight);
+        const sourceHeight = (heightToAdd * canvas.height) / imgHeight;
+
+        // Crear un canvas temporal para esta parte de la imagen
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = sourceHeight;
+
+        if (tempCtx) {
+          tempCtx.drawImage(canvas, 0, sourceY, canvas.width, sourceHeight, 0, 0, canvas.width, sourceHeight);
+          const tempImgData = tempCanvas.toDataURL('image/png');
+          
+          pdf.addImage(tempImgData, 'PNG', 10, yPosition, imgWidth, heightToAdd);
+        }
+
+        remainingHeight -= heightToAdd;
+        sourceY += sourceHeight;
+
+        if (remainingHeight > 0) {
+          pdf.addPage();
+          yPosition = 10;
+        }
+      }
+
+      // Generar nombre del archivo con fecha y hora
+      const now = new Date();
+      const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const fileName = `Dashboard_Accidentes_${timestamp}.pdf`;
+
+      // Descargar el PDF
+      pdf.save(fileName);
+
+      this.snackBar.open(`Reporte PDF generado exitosamente: ${fileName}`, 'Cerrar', {
+        duration: 5000,
+        panelClass: ['success-snackbar']
+      });
+
+    } catch (error) {
+      console.error('Error al generar el reporte PDF:', error);
+      this.snackBar.open('Error al generar el reporte PDF', 'Cerrar', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+    } finally {
+      this.isGeneratingReport = false;
+    }
+  }
+
+  async generateDistrictRiskReport(): Promise<void> {
+    // Verificar si hay errores o no hay datos
+    if (this.error || this.totalAccidentes === 0) {
+      this.snackBar.open('Generación de reporte en blanco o error en los datos', 'Cerrar', {
+        duration: 5000,
+        panelClass: ['warning-snackbar']
+      });
+      return;
+    }
+
+    this.isGeneratingDistrictReport = true;
+    
+    try {
+      // Cargar datos nuevamente para el análisis
+      this.apiService.getDatabaseData().subscribe({
+        next: async (response: any) => {
+          let data: DatabaseData[];
+          
+          if (Array.isArray(response)) {
+            data = response as DatabaseData[];
+          } else {
+            data = response.data as DatabaseData[];
+          }
+
+          // Mostrar mensaje de progreso
+          this.snackBar.open('Generando reporte de zonas de alto riesgo...', '', {
+            duration: 2000,
+            panelClass: ['info-snackbar']
+          });
+
+          // Crear el contenido del reporte
+          await this.createDistrictRiskPdf(data);
+        },
+        error: (err) => {
+          console.error('Error al cargar datos para el reporte:', err);
+          this.snackBar.open('Error al generar el reporte de zonas de riesgo', 'Cerrar', {
+            duration: 3000,
+            panelClass: ['error-snackbar']
+          });
+          this.isGeneratingDistrictReport = false;
+        }
+      });
+
+    } catch (error) {
+      console.error('Error al generar el reporte de zonas de riesgo:', error);
+      this.snackBar.open('Error al generar el reporte de zonas de riesgo', 'Cerrar', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+      this.isGeneratingDistrictReport = false;
+    }
+  }
+
+  private async createDistrictRiskPdf(data: DatabaseData[]): Promise<void> {
+    try {
+      // Análisis de datos por distrito
+      const districtAnalysis = this.analyzeDistrictRisk(data);
+      
+      // Crear el PDF
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      let yPosition = 20;
+
+      // Título principal
+      pdf.setFontSize(18);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('REPORTE DE ZONAS DE ALTO RIESGO', pdfWidth / 2, yPosition, { align: 'center' });
+      
+      yPosition += 10;
+      pdf.setFontSize(14);
+      pdf.text('Análisis por Distritos', pdfWidth / 2, yPosition, { align: 'center' });
+      
+      yPosition += 15;
+      
+      // Información general
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      const currentDate = new Date().toLocaleDateString('es-ES');
+      pdf.text(`Fecha de generación: ${currentDate}`, 20, yPosition);
+      yPosition += 7;
+      pdf.text(`Total de accidentes analizados: ${this.totalAccidentes}`, 20, yPosition);
+      yPosition += 7;
+      pdf.text(`Período analizado: ${districtAnalysis.periodoAnalisis}`, 20, yPosition);
+      yPosition += 15;
+
+      // Resumen ejecutivo
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('RESUMEN EJECUTIVO', 20, yPosition);
+      yPosition += 10;
+      
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'normal');
+      const resumenTexto = [
+        `• Distrito con mayor riesgo: ${districtAnalysis.distritoMayorRiesgo.nombre} (${districtAnalysis.distritoMayorRiesgo.accidentes} accidentes)`,
+        `• Promedio de accidentes por distrito: ${districtAnalysis.promedioAccidentes.toFixed(1)}`,
+        `• Distritos de alto riesgo: ${districtAnalysis.distritosAltoRiesgo.length}`,
+        `• Concentración del riesgo: ${districtAnalysis.concentracionRiesgo}% en los top 3 distritos`
+      ];
+
+      resumenTexto.forEach(texto => {
+        pdf.text(texto, 20, yPosition);
+        yPosition += 6;
+      });
+
+      yPosition += 10;
+
+      // Clasificación de distritos por nivel de riesgo
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('CLASIFICACIÓN POR NIVEL DE RIESGO', 20, yPosition);
+      yPosition += 10;
+
+      // Alto riesgo
+      if (districtAnalysis.distritosAltoRiesgo.length > 0) {
+        pdf.setFontSize(12);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(220, 20, 60); // Color rojo
+        pdf.text('ALTO RIESGO', 20, yPosition);
+        yPosition += 8;
+        
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(0, 0, 0);
+        
+        districtAnalysis.distritosAltoRiesgo.forEach((distrito: DistritoRiesgo) => {
+          const texto = `• ${distrito.nombre}: ${distrito.accidentes} accidentes (${distrito.porcentaje.toFixed(1)}% del total)`;
+          pdf.text(texto, 25, yPosition);
+          yPosition += 5;
+        });
+        yPosition += 5;
+      }
+
+      // Riesgo medio
+      if (districtAnalysis.distritosRiesgoMedio.length > 0) {
+        pdf.setFontSize(12);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(255, 140, 0); // Color naranja
+        pdf.text('RIESGO MEDIO', 20, yPosition);
+        yPosition += 8;
+        
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(0, 0, 0);
+        
+        districtAnalysis.distritosRiesgoMedio.forEach((distrito: DistritoRiesgo) => {
+          const texto = `• ${distrito.nombre}: ${distrito.accidentes} accidentes (${distrito.porcentaje.toFixed(1)}% del total)`;
+          pdf.text(texto, 25, yPosition);
+          yPosition += 5;
+        });
+        yPosition += 5;
+      }
+
+      // Bajo riesgo
+      if (districtAnalysis.distritosBajoRiesgo.length > 0) {
+        pdf.setFontSize(12);
+        pdf.setFont('helvetica', 'bold');
+        pdf.setTextColor(34, 139, 34); // Color verde
+        pdf.text('BAJO RIESGO', 20, yPosition);
+        yPosition += 8;
+        
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setTextColor(0, 0, 0);
+        
+        districtAnalysis.distritosBajoRiesgo.forEach((distrito: DistritoRiesgo) => {
+          const texto = `• ${distrito.nombre}: ${distrito.accidentes} accidentes (${distrito.porcentaje.toFixed(1)}% del total)`;
+          pdf.text(texto, 25, yPosition);
+          yPosition += 5;
+        });
+      }
+
+      // Nueva página para recomendaciones
+      pdf.addPage();
+      yPosition = 30;
+
+      // Recomendaciones
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('RECOMENDACIONES', 20, yPosition);
+      yPosition += 10;
+
+      pdf.setFontSize(11);
+      pdf.setFont('helvetica', 'normal');
+      
+      const recomendaciones = [
+        'PARA DISTRITOS DE ALTO RIESGO:',
+        '• Implementar campañas intensivas de seguridad vial',
+        '• Incrementar la presencia policial en horarios pico',
+        '• Mejorar la señalización y semáforos',
+        '• Realizar auditorías de seguridad vial',
+        '',
+        'PARA DISTRITOS DE RIESGO MEDIO:',
+        '• Monitoreo continuo de puntos críticos',
+        '• Campañas de concientización dirigidas',
+        '• Mejoras puntuales en infraestructura',
+        '',
+        'MEDIDAS GENERALES:',
+        '• Análisis detallado de patrones temporales',
+        '• Coordinación entre distritos para mejores prácticas',
+        '• Implementación de tecnología para monitoreo'
+      ];
+
+      recomendaciones.forEach(rec => {
+        if (rec === '') {
+          yPosition += 5;
+        } else if (rec.includes(':')) {
+          pdf.setFont('helvetica', 'bold');
+          pdf.text(rec, 20, yPosition);
+          pdf.setFont('helvetica', 'normal');
+          yPosition += 7;
+        } else {
+          pdf.text(rec, 20, yPosition);
+          yPosition += 6;
+        }
+      });
+
+      // Generar nombre del archivo
+      const now = new Date();
+      const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const fileName = `Reporte_Zonas_Alto_Riesgo_${timestamp}.pdf`;
+
+      // Descargar el PDF
+      pdf.save(fileName);
+
+      this.snackBar.open(`Reporte de zonas de riesgo generado: ${fileName}`, 'Cerrar', {
+        duration: 5000,
+        panelClass: ['success-snackbar']
+      });
+
+    } catch (error) {
+      console.error('Error al crear el PDF de zonas de riesgo:', error);
+      throw error;
+    } finally {
+      this.isGeneratingDistrictReport = false;
+    }
+  }
+
+  private analyzeDistrictRisk(data: DatabaseData[]): {
+    distritosAltoRiesgo: DistritoRiesgo[];
+    distritosRiesgoMedio: DistritoRiesgo[];
+    distritosBajoRiesgo: DistritoRiesgo[];
+    distritoMayorRiesgo: DistritoRiesgo;
+    promedioAccidentes: number;
+    concentracionRiesgo: number;
+    periodoAnalisis: string;
+  } {
+    // Agrupar accidentes por distrito
+    const accidentesPorDistrito = data.reduce((acc, item) => {
+      const distrito = this.distritoNombres[item.DISTRITO] || `Distrito ${item.DISTRITO}`;
+      acc[distrito] = (acc[distrito] || 0) + 1;
+      return acc;
+    }, {} as {[key: string]: number});
+
+    // Convertir a array y ordenar
+    const distritosArray: DistritoRiesgo[] = Object.entries(accidentesPorDistrito)
+      .map(([nombre, accidentes]) => ({
+        nombre,
+        accidentes,
+        porcentaje: (accidentes / this.totalAccidentes) * 100
+      }))
+      .sort((a, b) => b.accidentes - a.accidentes);
+
+    // Calcular estadísticas
+    const totalDistritos = distritosArray.length;
+    const promedioAccidentes = this.totalAccidentes / totalDistritos;
+    
+    // Clasificación por riesgo
+    const distritosAltoRiesgo = distritosArray.filter(d => d.accidentes > promedioAccidentes * 1.5);
+    const distritosBajoRiesgo = distritosArray.filter(d => d.accidentes < promedioAccidentes * 0.5);
+    const distritosRiesgoMedio = distritosArray.filter(d => 
+      d.accidentes >= promedioAccidentes * 0.5 && d.accidentes <= promedioAccidentes * 1.5
+    );
+
+    // Concentración del riesgo en top 3
+    const top3Accidentes = distritosArray.slice(0, 3).reduce((sum, d) => sum + d.accidentes, 0);
+    const concentracionRiesgo = ((top3Accidentes / this.totalAccidentes) * 100);
+
+    // Período de análisis
+    const fechas = data.map(item => new Date(item.FECHA_SINIESTRO));
+    const fechaMin = new Date(Math.min(...fechas.map(f => f.getTime())));
+    const fechaMax = new Date(Math.max(...fechas.map(f => f.getTime())));
+    const periodoAnalisis = `${fechaMin.toLocaleDateString('es-ES')} - ${fechaMax.toLocaleDateString('es-ES')}`;
+
+    return {
+      distritosAltoRiesgo,
+      distritosRiesgoMedio,
+      distritosBajoRiesgo,
+      distritoMayorRiesgo: distritosArray[0],
+      promedioAccidentes,
+      concentracionRiesgo: parseFloat(concentracionRiesgo.toFixed(1)),
+      periodoAnalisis
+    };
+  }
+
+  // ...existing code...
 }

@@ -23,18 +23,23 @@ body {
 
 /* Estilos para snackbars */
 .success-snackbar {
-  background: #4CAF50;
-  color: white;
+  background-color: #4caf50 !important;
+  color: white !important;
 }
 
 .error-snackbar {
-  background: #F44336;
-  color: white;
+  background-color: #f44336 !important;
+  color: white !important;
+}
+
+.warning-snackbar {
+  background-color: #ff9800 !important;
+  color: white !important;
 }
 
 .info-snackbar {
-  background-color: #2196f3;
-  color: white;
+  background-color: #2196f3 !important;
+  color: white !important;
 }
 
 /* Estilos globales adicionales */

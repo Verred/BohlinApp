@@ -30,153 +30,148 @@
   </div>
 
   <div class="table-container" *ngIf="!isLoading && !error">
-    <table mat-table [dataSource]="filteredData" matSort class="mat-elevation-z8">
+    <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8">
       <!-- ID Column -->
       <ng-container matColumnDef="id">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> ID </th>
         <td mat-cell *matCellDef="let element"> {{element.id}} </td>
       </ng-container>
 
-      <!-- Fecha Column -->
-      <ng-container matColumnDef="fecha">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> Fecha </th>
-        <td mat-cell *matCellDef="let element"> {{element.fecha | date:'dd/MM/yyyy'}} </td>
+      <!-- Fecha Siniestro Column -->
+      <ng-container matColumnDef="FECHA_SINIESTRO">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Fecha Siniestro </th>
+        <td mat-cell *matCellDef="let element"> {{element.FECHA_SINIESTRO | date:'dd/MM/yyyy'}} </td>
       </ng-container>
 
-      <!-- Hora Column -->
-      <ng-container matColumnDef="hora">
+      <!-- Hora Siniestro Column -->
+      <ng-container matColumnDef="HORA_SINIESTRO">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Hora </th>
-        <td mat-cell *matCellDef="let element"> {{element.hora}} </td>
+        <td mat-cell *matCellDef="let element"> {{element.HORA_SINIESTRO}}:00 </td>
       </ng-container>
 
-      <!-- Clase Column -->
-      <ng-container matColumnDef="clase">
+      <!-- Clase Siniestro Column -->
+      <ng-container matColumnDef="CLASE_SINIESTRO">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Clase </th>
-        <td mat-cell *matCellDef="let element"> {{element.clase}} </td>
+        <td mat-cell *matCellDef="let element"> {{element.CLASE_SINIESTRO}} </td>
       </ng-container>
 
-      <!-- Vehículos Dañados Column -->
-      <ng-container matColumnDef="vehiculos_danados">
+      <!-- Cantidad Vehículos Column -->
+      <ng-container matColumnDef="CANTIDAD_DE_VEHICULOS_DANADOS">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Vehículos Dañados </th>
-        <td mat-cell *matCellDef="let element"> {{element.vehiculos_danados}} </td>
+        <td mat-cell *matCellDef="let element"> {{element.CANTIDAD_DE_VEHICULOS_DANADOS}} </td>
       </ng-container>
 
       <!-- Distrito Column -->
-      <ng-container matColumnDef="distrito">
+      <ng-container matColumnDef="DISTRITO">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Distrito </th>
-        <td mat-cell *matCellDef="let element"> {{element.distrito}} </td>
+        <td mat-cell *matCellDef="let element"> {{element.DISTRITO}} </td>
       </ng-container>
 
       <!-- Zona Column -->
-      <ng-container matColumnDef="zona">
+      <ng-container matColumnDef="ZONA">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Zona </th>
-        <td mat-cell *matCellDef="let element"> {{element.zona}} </td>
+        <td mat-cell *matCellDef="let element"> {{element.ZONA}} </td>
       </ng-container>
 
       <!-- Tipo de Vía Column -->
-      <ng-container matColumnDef="tipo_via">
+      <ng-container matColumnDef="TIPO_DE_VIA">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Tipo de Vía </th>
-        <td mat-cell *matCellDef="let element"> {{element.tipo_via}} </td>
+        <td mat-cell *matCellDef="let element"> {{element.TIPO_DE_VIA}} </td>
       </ng-container>
 
       <!-- Red Vial Column -->
-      <ng-container matColumnDef="red_vial">
+      <ng-container matColumnDef="RED_VIAL">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Red Vial </th>
-        <td mat-cell *matCellDef="let element"> {{element.red_vial}} </td>
+        <td mat-cell *matCellDef="let element"> {{element.RED_VIAL}} </td>
       </ng-container>
 
-      <!-- Ciclovía Column -->
-      <ng-container matColumnDef="ciclovia">
+      <!-- Existe Ciclovía Column -->
+      <ng-container matColumnDef="EXISTE_CICLOVIA">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Ciclovía </th>
-        <td mat-cell *matCellDef="let element"> {{element.ciclovia ? 'Sí' : 'No'}} </td>
+        <td mat-cell *matCellDef="let element"> {{element.EXISTE_CICLOVIA === 1 ? 'Sí' : 'No'}} </td>
       </ng-container>
 
-      <!-- Latitud Column -->
-      <ng-container matColumnDef="latitud">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> Latitud </th>
-        <td mat-cell *matCellDef="let element"> {{element.latitud}} </td>
-      </ng-container>
-
-      <!-- Longitud Column -->
-      <ng-container matColumnDef="longitud">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> Longitud </th>
-        <td mat-cell *matCellDef="let element"> {{element.longitud}} </td>
-      </ng-container>
-
-      <!-- Clima Column -->
-      <ng-container matColumnDef="clima">
+      <!-- Condición Climática Column -->
+      <ng-container matColumnDef="CONDICION_CLIMATICA">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Clima </th>
-        <td mat-cell *matCellDef="let element"> {{element.clima}} </td>
+        <td mat-cell *matCellDef="let element"> {{element.CONDICION_CLIMATICA}} </td>
       </ng-container>
 
       <!-- Zonificación Column -->
-      <ng-container matColumnDef="zonificacion">
+      <ng-container matColumnDef="ZONIFICACION">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Zonificación </th>
-        <td mat-cell *matCellDef="let element"> {{element.zonificacion}} </td>
+        <td mat-cell *matCellDef="let element"> {{element.ZONIFICACION}} </td>
       </ng-container>
 
       <!-- Características de Vía Column -->
-      <ng-container matColumnDef="caracteristicas_via">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> Características de Vía </th>
-        <td mat-cell *matCellDef="let element"> {{element.caracteristicas_via}} </td>
+      <ng-container matColumnDef="CARACTERISTICAS_DE_VIA">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Características Vía </th>
+        <td mat-cell *matCellDef="let element"> {{element.CARACTERISTICAS_DE_VIA}} </td>
       </ng-container>
 
-      <!-- Perfil de Vía Column -->
-      <ng-container matColumnDef="perfil_via">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> Perfil de Vía </th>
-        <td mat-cell *matCellDef="let element"> {{element.perfil_via}} </td>
+      <!-- Perfil Longitudinal Column -->
+      <ng-container matColumnDef="PERFIL_LONGITUDINAL_VIA">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Perfil Vía </th>
+        <td mat-cell *matCellDef="let element"> {{element.PERFIL_LONGITUDINAL_VIA}} </td>
       </ng-container>
 
       <!-- Superficie de Calzada Column -->
-      <ng-container matColumnDef="superficie_calzada">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> Superficie de Calzada </th>
-        <td mat-cell *matCellDef="let element"> {{element.superficie_calzada}} </td>
+      <ng-container matColumnDef="SUPERFICIE_DE_CALZADA">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Superficie Calzada </th>
+        <td mat-cell *matCellDef="let element"> {{element.SUPERFICIE_DE_CALZADA}} </td>
       </ng-container>
 
       <!-- Señalización Column -->
-      <ng-container matColumnDef="senalizacion">
+      <ng-container matColumnDef="SENALIZACION">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Señalización </th>
-        <td mat-cell *matCellDef="let element"> {{element.senalizacion}} </td>
+        <td mat-cell *matCellDef="let element"> {{element.SENALIZACION}} </td>
       </ng-container>
 
       <!-- Día de la Semana Column -->
-      <ng-container matColumnDef="dia_semana">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> Día de la Semana </th>
-        <td mat-cell *matCellDef="let element"> {{element.dia_semana}} </td>
+      <ng-container matColumnDef="DIA_DE_LA_SEMANA">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Día Semana </th>
+        <td mat-cell *matCellDef="let element"> {{element.DIA_DE_LA_SEMANA}} </td>
       </ng-container>
 
       <!-- Mes Column -->
-      <ng-container matColumnDef="mes">
+      <ng-container matColumnDef="MES">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Mes </th>
-        <td mat-cell *matCellDef="let element"> {{element.mes}} </td>
+        <td mat-cell *matCellDef="let element"> {{element.MES}} </td>
       </ng-container>
 
       <!-- Periodo del Día Column -->
-      <ng-container matColumnDef="periodo_dia">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> Periodo del Día </th>
-        <td mat-cell *matCellDef="let element"> {{element.periodo_dia}} </td>
+      <ng-container matColumnDef="PERIODO_DEL_DIA">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Periodo Día </th>
+        <td mat-cell *matCellDef="let element"> {{element.PERIODO_DEL_DIA}} </td>
       </ng-container>
 
       <!-- Feriado Column -->
-      <ng-container matColumnDef="feriado">
+      <ng-container matColumnDef="FERIADO">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Feriado </th>
-        <td mat-cell *matCellDef="let element"> {{element.feriado ? 'Sí' : 'No'}} </td>
+        <td mat-cell *matCellDef="let element"> {{element.FERIADO === 1 ? 'Sí' : 'No'}} </td>
       </ng-container>
 
       <!-- Accidente Column -->
-      <ng-container matColumnDef="accidente">
+      <ng-container matColumnDef="ACCIDENTE">
         <th mat-header-cell *matHeaderCellDef mat-sort-header> Accidente </th>
-        <td mat-cell *matCellDef="let element"> {{element.accidente ? 'Sí' : 'No'}} </td>
+        <td mat-cell *matCellDef="let element"> {{element.ACCIDENTE === 1 ? 'Sí' : 'No'}} </td>
       </ng-container>
 
-      <!-- Created At Column -->
-      <ng-container matColumnDef="created_at">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header> Creado </th>
-        <td mat-cell *matCellDef="let element"> {{element.created_at | date:'dd/MM/yyyy HH:mm'}} </td>
+      <!-- Fecha Ingreso Column -->
+      <ng-container matColumnDef="FECHA_INGRESO">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header> Fecha Ingreso </th>
+        <td mat-cell *matCellDef="let element"> {{element.FECHA_INGRESO | date:'dd/MM/yyyy'}} </td>
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
     </table>
+    
+    <!-- Paginador -->
+    <mat-paginator #paginator
+                   [pageSizeOptions]="[5, 10, 30, 50]"
+                   [pageSize]="5"
+                   showFirstLastButtons>
+    </mat-paginator>
   </div>
 </div>

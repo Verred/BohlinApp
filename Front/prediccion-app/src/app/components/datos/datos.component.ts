@@ -1,13 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule } from '@angular/material/paginator';
-import { MatSortModule } from '@angular/material/sort';
+import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatSortModule, MatSort } from '@angular/material/sort';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTableDataSource } from '@angular/material/table';
 import { DatosService } from '../../services/datos.service';
 import { AccidentData } from '../../models/prediction-data';
 
@@ -28,34 +29,36 @@ import { AccidentData } from '../../models/prediction-data';
   templateUrl: './datos.component.html',
   styleUrl: './datos.component.scss'
 })
-export class DatosComponent implements OnInit {
+export class DatosComponent implements OnInit, AfterViewInit {
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+
   displayedColumns: string[] = [
     'id',
-    'fecha',
-    'hora',
-    'clase',
-    'vehiculos_danados',
-    'distrito',
-    'zona',
-    'tipo_via',
-    'red_vial',
-    'ciclovia',
-    'clima',
-    'zonificacion',
-    'caracteristicas_via',
-    'perfil_via',
-    'superficie_calzada',
-    'senalizacion',
-    'dia_semana',
-    'mes',
-    'periodo_dia',
-    'feriado',
-    'accidente',
-    'created_at'
+    'FECHA_SINIESTRO',
+    'HORA_SINIESTRO',
+    'CLASE_SINIESTRO',
+    'CANTIDAD_DE_VEHICULOS_DANADOS',
+    'DISTRITO',
+    'ZONA',
+    'TIPO_DE_VIA',
+    'RED_VIAL',
+    'EXISTE_CICLOVIA',
+    'CONDICION_CLIMATICA',
+    'ZONIFICACION',
+    'CARACTERISTICAS_DE_VIA',
+    'PERFIL_LONGITUDINAL_VIA',
+    'SUPERFICIE_DE_CALZADA',
+    'SENALIZACION',
+    'DIA_DE_LA_SEMANA',
+    'MES',
+    'PERIODO_DEL_DIA',
+    'FERIADO',
+    'ACCIDENTE',
+    'FECHA_INGRESO'
   ];
   
-  dataSource: AccidentData[] = [];
-  filteredData: AccidentData[] = [];
+  dataSource = new MatTableDataSource<any>([]);
   isLoading = true;
   error = false;
   searchText = '';
@@ -66,38 +69,38 @@ export class DatosComponent implements OnInit {
     this.loadData();
   }
 
+  ngAfterViewInit(): void {
+    // Asignar el paginador y sort después de que la vista se inicialice
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
+    
+    // Configurar opciones de página
+    if (this.paginator) {
+      this.paginator.pageSize = 5;
+      this.paginator.pageSizeOptions = [5, 10, 30, 50];
+    }
+  }
+
   loadData(): void {
     this.isLoading = true;
     this.error = false;
 
     this.datosService.getAllData().subscribe({
       next: (response) => {
+        console.log('Datos recibidos:', response);
         if (Array.isArray(response) && response.length > 0) {
-          this.dataSource = response.map((item: any) => ({
-            id: item.id,
-            fecha: item.FECHA_SINIESTRO,
-            hora: item.HORA_SINIESTRO,
-            clase: item.CLASE_SINIESTRO,
-            vehiculos_danados: item.CANTIDAD_DE_VEHICULOS_DANADOS,
-            distrito: item.DISTRITO,
-            zona: item.ZONA,
-            tipo_via: item.TIPO_DE_VIA,
-            red_vial: item.RED_VIAL,
-            ciclovia: item.EXISTE_CICLOVIA,
-            clima: item.CONDICION_CLIMATICA,
-            zonificacion: item.ZONIFICACION,
-            caracteristicas_via: item.CARACTERISTICAS_DE_VIA,
-            perfil_via: item.PERFIL_LONGITUDINAL_VIA,
-            superficie_calzada: item.SUPERFICIE_DE_CALZADA,
-            senalizacion: item.SENALIZACION,
-            dia_semana: item.DIA_DE_LA_SEMANA,
-            mes: item.MES,
-            periodo_dia: item.PERIODO_DEL_DIA,
-            feriado: item.FERIADO,
-            accidente: item.ACCIDENTE,
-            created_at: item.FECHA_INGRESO
-          }));
-          this.filteredData = [...this.dataSource];
+          // Usar los datos directamente sin mapeo
+          this.dataSource.data = response;
+          
+          // Re-asignar el paginador después de cargar los datos
+          setTimeout(() => {
+            if (this.paginator) {
+              this.dataSource.paginator = this.paginator;
+            }
+            if (this.sort) {
+              this.dataSource.sort = this.sort;
+            }
+          });
         } else {
           this.error = true;
         }
@@ -112,18 +115,12 @@ export class DatosComponent implements OnInit {
   }
 
   applyFilter(event: Event): void {
-    const filterValue = (event.target as HTMLInputElement).value.toLowerCase();
-    this.searchText = filterValue;
+    const filterValue = (event.target as HTMLInputElement).value;
+    this.dataSource.filter = filterValue.trim().toLowerCase();
     
-    if (filterValue) {
-      this.filteredData = this.dataSource.filter((item) => {
-        return Object.keys(item).some(key => {
-          const value = String(item[key as keyof AccidentData] || '').toLowerCase();
-          return value.includes(filterValue);
-        });
-      });
-    } else {
-      this.filteredData = [...this.dataSource];
+    // Resetear a la primera página cuando se aplique un filtro
+    if (this.dataSource.paginator) {
+      this.dataSource.paginator.firstPage();
     }
   }
 
