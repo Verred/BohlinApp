@@ -13,8 +13,12 @@ export interface User {
 }
 
 export interface AuthResponse {
-  access: string;
-  refresh: string;
+  message: string;
+  success: boolean;
+  tokens: {
+    access: string;
+    refresh: string;
+  };
   user: User;
 }
 
@@ -41,19 +45,30 @@ export class AuthService {
   }
 
   login(username: string, password: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.API_URL}/login/`, { username, password })
-      .pipe(
-        tap((response: AuthResponse) => {
-          localStorage.setItem('access_token', response.access);
-          localStorage.setItem('refresh_token', response.refresh);
-          localStorage.setItem('user', JSON.stringify(response.user));
-          this.currentUserSubject.next(response.user);
-        }),
-        catchError((error: HttpErrorResponse) => {
-          console.error('Login error:', error);
-          return throwError(() => error);
-        })
-      );
+    return this.http.post<AuthResponse>(`${this.API_URL}/login/`, { 
+      username, 
+      password 
+    }).pipe(
+      tap(response => {
+        console.log('Guardando tokens:', response.tokens); // Debug
+        
+        // Guardar tokens en localStorage
+        localStorage.setItem('access_token', response.tokens.access);
+        localStorage.setItem('refresh_token', response.tokens.refresh);
+        
+        // Guardar información del usuario
+        localStorage.setItem('user', JSON.stringify(response.user));
+        
+        // Actualizar el usuario actual
+        this.currentUserSubject.next(response.user);
+        
+        console.log('Token guardado:', localStorage.getItem('access_token')); // Debug
+      }),
+      catchError(error => {
+        console.error('Error en login:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   refreshToken(): Observable<any> {
@@ -107,7 +122,17 @@ export class AuthService {
 
   isLoggedIn(): boolean {
     const token = this.getToken();
-    return token !== null && !this.isTokenExpired(token);
+    console.log('Verificando si está logueado. Token:', token); // Debug
+    
+    if (!token) {
+      console.log('No hay token'); // Debug
+      return false;
+    }
+    
+    const isExpired = this.isTokenExpired(token);
+    console.log('Token expirado:', isExpired); // Debug
+    
+    return !isExpired;
   }
 
   getCurrentUser(): User | null {

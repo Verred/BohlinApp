@@ -50,15 +50,32 @@ export class LoginComponent {
       this.isLoading = true;
       
       const { username, password } = this.loginForm.value;
+      console.log('Intentando login con:', username);
       
       this.authService.login(username, password).subscribe({
         next: (response) => {
+          console.log('Login exitoso:', response);
           this.isLoading = false;
-          this.snackBar.open('Inicio de sesión exitoso', 'Cerrar', {
-            duration: 3000,
-            panelClass: ['success-snackbar']
-          });
-          this.router.navigate(['/dashboard']);
+          
+          // Verificar que el servicio reconoce que está logueado
+          setTimeout(() => {
+            console.log('¿Está logueado después del login?', this.authService.isLoggedIn());
+            
+            this.snackBar.open('Inicio de sesión exitoso', 'Cerrar', {
+              duration: 3000,
+              panelClass: ['success-snackbar']
+            });
+            
+            console.log('Navegando a dashboard...');
+            this.router.navigate(['/dashboard']).then(success => {
+              console.log('Navegación exitosa:', success);
+              if (!success) {
+                console.log('La navegación falló - probablemente bloqueada por AuthGuard');
+              }
+            }).catch(error => {
+              console.error('Error en navegación:', error);
+            });
+          }, 100); // Pequeño delay para asegurar que el token se guardó
         },
         error: (error) => {
           this.isLoading = false;
