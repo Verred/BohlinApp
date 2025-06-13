@@ -17,7 +17,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('HORA_SINIESTRO', models.IntegerField()),
                 ('CLASE_SINIESTRO', models.IntegerField()),
-                ('CANTIDAD_DE_VEHICULOS_DAÑADOS', models.IntegerField()),
+                ('CANTIDAD_DE_VEHICULOS_DANADOS', models.IntegerField()),
                 ('DISTRITO', models.IntegerField()),
                 ('ZONA', models.IntegerField()),
                 ('TIPO_DE_VIA', models.IntegerField()),
