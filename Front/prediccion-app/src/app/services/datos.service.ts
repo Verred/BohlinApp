@@ -7,8 +7,8 @@ import { saveAs } from 'file-saver';
   providedIn: 'root'
 })
 export class DatosService {
-  private baseEndpoint = 'https://bohlin-api.onrender.com/api';
-
+  //private baseEndpoint = 'https://bohlin-api.onrender.com/api';
+  private baseEndpoint = 'http://127.0.0.1:8000/api';
   constructor(private http: HttpClient) {}
 
   getAllData(): Observable<any> {

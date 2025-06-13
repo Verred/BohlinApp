@@ -1,8 +1,23 @@
-<header class="navbar">
-  <div class="navbar-brand">
-    <a [routerLink]="'/'">{{appTitle}}</a>
+<mat-toolbar color="primary">
+  <span>Sistema de Predicción de Accidentes</span>
+  <span class="spacer"></span>
+  
+  <div *ngIf="currentUser$ | async as user" class="user-menu">
+    <button mat-button [matMenuTriggerFor]="userMenu">
+      <mat-icon>account_circle</mat-icon>
+      {{ user.username }}
+      <mat-icon>arrow_drop_down</mat-icon>
+    </button>
+    
+    <mat-menu #userMenu="matMenu">
+      <button mat-menu-item (click)="changePassword()">
+        <mat-icon>lock</mat-icon>
+        <span>Cambiar Contraseña</span>
+      </button>
+      <button mat-menu-item (click)="logout()">
+        <mat-icon>logout</mat-icon>
+        <span>Cerrar Sesión</span>
+      </button>
+    </mat-menu>
   </div>
-  <div class="navbar-actions">
-    <button class="btn-login">Ingresar</button>
-  </div>
-</header>
+</mat-toolbar>
