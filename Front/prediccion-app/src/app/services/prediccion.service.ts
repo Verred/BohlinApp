@@ -8,8 +8,8 @@ import { PredictionData, PredictionRequest, PredictionResponse } from '../models
   providedIn: 'root'
 })
 export class PrediccionService {
-  //private baseUrl = 'https://bohlin-api.onrender.com/api';
-  private baseUrl = 'http://127.0.0.1:8000/api';
+  private baseUrl = 'https://bohlin-api.onrender.com/api';
+  //private baseUrl = 'http://127.0.0.1:8000/api';
 
 
   constructor(private http: HttpClient) { }

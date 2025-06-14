@@ -1,11 +1,17 @@
-
-
 <div class="app-container">
-  <app-navbar></app-navbar>
-  <div class="content-container">
-    <app-sidebar></app-sidebar>
-    <main class="main-content">
-      <router-outlet></router-outlet>
-    </main>
-  </div>
+  <!-- Mostrar navbar y sidebar solo si está logueado -->
+  <ng-container *ngIf="isLoggedIn$ | async">
+    <app-navbar></app-navbar>
+    <div class="content-container">
+      <app-sidebar></app-sidebar>
+      <main class="main-content">
+        <router-outlet></router-outlet>
+      </main>
+    </div>
+  </ng-container>
+  
+  <!-- Mostrar solo el contenido si NO está logueado -->
+  <ng-container *ngIf="!(isLoggedIn$ | async)">
+    <router-outlet></router-outlet>
+  </ng-container>
 </div>

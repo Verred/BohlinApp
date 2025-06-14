@@ -39,15 +39,15 @@ export class ChangePasswordComponent {
     private router: Router
   ) {
     this.passwordForm = this.fb.group({
-      oldPassword: ['', [Validators.required]],
-      newPassword: ['', [Validators.required, Validators.minLength(8)]],
-      confirmPassword: ['', [Validators.required]]
+      old_password: ['', [Validators.required]],
+      new_password: ['', [Validators.required, Validators.minLength(8)]],
+      confirm_password: ['', [Validators.required]]
     }, { validators: this.passwordMatchValidator });
   }
 
   passwordMatchValidator(form: FormGroup) {
-    const newPassword = form.get('newPassword');
-    const confirmPassword = form.get('confirmPassword');
+    const newPassword = form.get('new_password');
+    const confirmPassword = form.get('confirm_password');
     
     if (newPassword && confirmPassword && newPassword.value !== confirmPassword.value) {
       confirmPassword.setErrors({ passwordMismatch: true });
@@ -61,9 +61,16 @@ export class ChangePasswordComponent {
     if (this.passwordForm.valid) {
       this.isLoading = true;
       
-      const { oldPassword, newPassword } = this.passwordForm.value;
+      const { old_password, new_password, confirm_password } = this.passwordForm.value;
       
-      this.authService.changePassword(oldPassword, newPassword).subscribe({
+      // Debug: mostrar los valores del formulario
+      console.log('Valores del formulario:', {
+        old_password: old_password ? '[PRESENTE]' : '[VACIO]',
+        new_password: new_password ? '[PRESENTE]' : '[VACIO]',
+        confirm_password: confirm_password ? '[PRESENTE]' : '[VACIO]'
+      });
+      
+      this.authService.changePassword(old_password, new_password, confirm_password).subscribe({
         next: (response) => {
           this.isLoading = false;
           this.snackBar.open('Contraseña cambiada exitosamente', 'Cerrar', {
@@ -76,11 +83,24 @@ export class ChangePasswordComponent {
           this.isLoading = false;
           console.error('Error al cambiar contraseña:', error);
           
+          // Debug: mostrar los errores específicos de la API
+          console.log('Errores específicos de la API:', error.error?.errors);
+          
           let errorMessage = 'Error al cambiar la contraseña';
-          if (error.error?.detail) {
+          if (error.error?.errors) {
+            // Mostrar errores específicos de validación
+            const errors = error.error.errors;
+            if (errors.old_password) {
+              errorMessage = `Contraseña actual: ${errors.old_password[0]}`;
+            } else if (errors.new_password) {
+              errorMessage = `Nueva contraseña: ${errors.new_password[0]}`;
+            } else if (errors.confirm_password) {
+              errorMessage = `Confirmar contraseña: ${errors.confirm_password[0]}`;
+            }
+          } else if (error.error?.detail) {
             errorMessage = error.error.detail;
-          } else if (error.error?.old_password) {
-            errorMessage = 'Contraseña actual incorrecta';
+          } else if (error.error?.message) {
+            errorMessage = error.error.message;
           }
           
           this.snackBar.open(errorMessage, 'Cerrar', {
@@ -88,6 +108,13 @@ export class ChangePasswordComponent {
             panelClass: ['error-snackbar']
           });
         }
+      });
+    } else {
+      console.log('Formulario inválido:', this.passwordForm.errors);
+      console.log('Errores por campo:', {
+        old_password: this.passwordForm.get('old_password')?.errors,
+        new_password: this.passwordForm.get('new_password')?.errors,
+        confirm_password: this.passwordForm.get('confirm_password')?.errors
       });
     }
   }

@@ -12,7 +12,7 @@ export class AuthInterceptorService implements HttpInterceptor {
   constructor(private authService: AuthService) {}
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-    // Excluir rutas de autenticación del interceptor
+    // Excluir solo login y refresh del interceptor, pero permitir change-password
     if (req.url.includes('/auth/login') || req.url.includes('/auth/refresh')) {
       return next.handle(req);
     }
@@ -24,7 +24,7 @@ export class AuthInterceptorService implements HttpInterceptor {
 
     return next.handle(req).pipe(
       catchError((error: HttpErrorResponse) => {
-        if (error.status === 401) {
+        if (error.status === 401 && !req.url.includes('/auth/change-password')) {
           return this.handle401Error(req, next);
         }
         return throwError(() => error);

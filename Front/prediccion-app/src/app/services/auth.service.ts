@@ -26,7 +26,7 @@ export interface AuthResponse {
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly API_URL = 'http://127.0.0.1:8000/api/auth';
+  private readonly API_URL = 'https://bohlin-api.onrender.com/api/auth';
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
@@ -92,13 +92,35 @@ export class AuthService {
       );
   }
 
-  changePassword(oldPassword: string, newPassword: string): Observable<any> {
-    return this.http.post(`${this.API_URL}/change-password/`, {
+  changePassword(oldPassword: string, newPassword: string, confirmPassword: string): Observable<any> {
+    const token = this.getToken();
+    
+    // Debug: verificar el token
+    console.log('Token para cambio de contraseña:', token);
+    console.log('Token expirado?', this.isTokenExpired(token || ''));
+    
+    if (!token) {
+      return throwError(() => new Error('No hay token de autenticación'));
+    }
+
+    const headers = {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    };
+
+    const body = {
       old_password: oldPassword,
-      new_password: newPassword
-    }).pipe(
+      new_password: newPassword,
+      confirm_password: confirmPassword
+    };
+
+    // Debug: mostrar el body que se envía
+    console.log('Body enviado:', body);
+
+    return this.http.post(`${this.API_URL}/change-password/`, body, { headers }).pipe(
       catchError((error: HttpErrorResponse) => {
         console.error('Change password error:', error);
+        console.error('Error details:', error.error);
         return throwError(() => error);
       })
     );
