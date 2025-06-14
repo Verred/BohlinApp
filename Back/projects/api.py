@@ -6,7 +6,7 @@ from rest_framework.response import Response
 
 class SiniestroViewSet(viewsets.ModelViewSet):
     queryset = Siniestro.objects.all()
-    permission_classes = [permissions.AllowAny] 
+    permission_classes = [permissions.IsAuthenticated]  # Requiere autenticación
     serializer_class = SiniestroSerializer
 
     @action(detail=False, methods=['get'])

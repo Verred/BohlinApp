@@ -1,0 +1,68 @@
+{
+  "timestamp": "2025-06-13T00:07:22.442022",
+  "training_date": "2025-06-13 00:07:22",
+  "threshold": 0.5,
+  "accuracy": 0.5557830092118731,
+  "precision": 0.5483870967741935,
+  "recall": 0.6270491803278688,
+  "f1_score": 0.5850860420650096,
+  "roc_auc": 0.5759202453987731,
+  "confusion_matrix": {
+    "true_negatives": 237,
+    "false_positives": 252,
+    "false_negatives": 182,
+    "true_positives": 306
+  },
+  "dataset_info": {
+    "total_samples": 4884,
+    "training_samples": 3907,
+    "test_samples": 977,
+    "features_count": 18,
+    "target_distribution": {
+      "0": 2442,
+      "1": 2442
+    }
+  },
+  "top_features": [
+    {
+      "feature": "DISTRITO",
+      "importance": 0.4137113647961526
+    },
+    {
+      "feature": "HORA_SINIESTRO",
+      "importance": 0.09838445840050389
+    },
+    {
+      "feature": "MES",
+      "importance": 0.07774463760109161
+    },
+    {
+      "feature": "DIA_DE_LA_SEMANA",
+      "importance": 0.057788077078808724
+    },
+    {
+      "feature": "CLASE_SINIESTRO",
+      "importance": 0.05601652295994307
+    },
+    {
+      "feature": "ZONIFICACION",
+      "importance": 0.04956151881756896
+    },
+    {
+      "feature": "PERIODO_DEL_DIA",
+      "importance": 0.041561271044245666
+    },
+    {
+      "feature": "CARACTERISTICAS_DE_VIA",
+      "importance": 0.03992382685693161
+    },
+    {
+      "feature": "TIPO_DE_VIA",
+      "importance": 0.03927313710293732
+    },
+    {
+      "feature": "RED_VIAL",
+      "importance": 0.025742599966667886
+    }
+  ]
+}

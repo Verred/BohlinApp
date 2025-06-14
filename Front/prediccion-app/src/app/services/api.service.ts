@@ -10,7 +10,8 @@ import { ApiModelResponse } from '../models/prediction-data';
 })
 export class ApiService {
   private baseEndpoint = 'https://bohlin-api.onrender.com/api';
-
+  //private baseEndpoint = 'http://127.0.0.1:8000/api';
+  
   constructor(private http: HttpClient) { }
 
   // Obtener información del modelo

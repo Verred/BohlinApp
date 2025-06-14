@@ -1,13 +1,23 @@
 from rest_framework import routers
 from django.urls import path
+from rest_framework_simplejwt.views import TokenRefreshView
 from .api import SiniestroViewSet
 from . import views
+from . import auth_views
 
 router = routers.DefaultRouter()
 
 router.register('api/siniestros', SiniestroViewSet, basename='siniestros')
 
 urlpatterns = [
+    # Autenticación JWT
+    path('api/auth/login/', auth_views.login_view, name='login'),
+    path('api/auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('api/auth/logout/', auth_views.logout_view, name='logout'),
+    path('api/auth/change-password/', auth_views.change_password_view, name='change_password'),
+    path('api/auth/profile/', auth_views.profile_view, name='profile'),
+    
+    # Endpoints existentes de ML
     path('api/train-model/', views.train_model, name='train_model'),
     path('api/predict/', views.predict, name='predict'),
     path('api/model-info/', views.model_info, name='model_info'),
