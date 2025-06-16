@@ -531,7 +531,7 @@ export class DashboardComponent implements OnInit {
   async generatePdfReport(): Promise<void> {
     // Verificar si hay errores o no hay datos
     if (this.error || this.totalAccidentes === 0) {
-      this.snackBar.open('Generación de reporte en blanco o error en los datos', 'Cerrar', {
+      this.snackBar.open('No hay datos disponibles para generar el reporte', 'Cerrar', {
         duration: 5000,
         panelClass: ['warning-snackbar']
       });
@@ -541,107 +541,360 @@ export class DashboardComponent implements OnInit {
     this.isGeneratingReport = true;
     
     try {
-      // Obtener el contenedor del dashboard
-      const dashboardElement = document.querySelector('.dashboard-content') as HTMLElement;
-      
-      if (!dashboardElement) {
-        throw new Error('No se encontró el contenido del dashboard');
-      }
-
-      // Mostrar mensaje de progreso
-      this.snackBar.open('Generando reporte PDF...', '', {
-        duration: 2000,
+      // Mostrar mensaje de progreso inmediatamente
+      const loadingSnackBar = this.snackBar.open('Preparando reporte PDF...', '', {
+        duration: 0, // No auto-dismiss
         panelClass: ['info-snackbar']
       });
 
-      // Configurar html2canvas para mejor calidad
-      const canvas = await html2canvas(dashboardElement, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        width: dashboardElement.scrollWidth,
-        height: dashboardElement.scrollHeight
+      // Esperar a que todos los gráficos estén completamente renderizados
+      await this.waitForChartsToRender();
+
+      loadingSnackBar.dismiss();
+      const generatingSnackBar = this.snackBar.open('Generando reporte PDF...', '', {
+        duration: 0,
+        panelClass: ['info-snackbar']
       });
 
       // Crear el PDF
-      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
-        format: 'a4'
+        format: 'a4',
+        compress: true
       });
 
-      // Calcular dimensiones para ajustar la imagen al PDF
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pdfWidth - 20; // Margen de 10mm a cada lado
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const margin = 15;
 
-      // Agregar título
-      const currentDate = new Date().toLocaleDateString('es-ES');
-      pdf.setFontSize(16);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('Dashboard de Accidentes de Tránsito', pdfWidth / 2, 15, { align: 'center' });
-      
-      pdf.setFontSize(12);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text(`Fecha de generación: ${currentDate}`, pdfWidth / 2, 25, { align: 'center' });
-      pdf.text(`Total de accidentes: ${this.totalAccidentes}`, pdfWidth / 2, 32, { align: 'center' });
+      // Agregar encabezado
+      this.addPdfHeader(pdf, pdfWidth);
 
-      // Si la imagen es muy alta, dividirla en páginas
-      let yPosition = 40;
-      let remainingHeight = imgHeight;
-      let sourceY = 0;
+      let yPosition = 50; // Posición inicial después del encabezado
 
-      while (remainingHeight > 0) {
-        const pageHeight = pdfHeight - yPosition - 10; // Margen inferior
-        const heightToAdd = Math.min(remainingHeight, pageHeight);
-        const sourceHeight = (heightToAdd * canvas.height) / imgHeight;
+      // Lista de gráficos a capturar
+      const chartConfigs = [
+        {
+          id: 'historicoAccidentesChart',
+          title: 'Evolución de Accidentes a lo largo del tiempo',
+          height: 60
+        },
+        {
+          id: 'tipoViaChart',
+          title: 'Distribución por Tipo de Vía',
+          height: 60
+        },
+        {
+          id: 'distritoChart',
+          title: 'Accidentes por Distrito',
+          height: 60
+        },
+        {
+          id: 'accidentesPorDiaChart',
+          title: 'Accidentes por Día de la Semana',
+          height: 60
+        },
+        {
+          id: 'accidentesPorHoraChart',
+          title: 'Accidentes por Hora del Día',
+          height: 60
+        },
+        {
+          id: 'importanciaVariablesChart',
+          title: 'Variables más importantes del modelo',
+          height: 60
+        }
+      ];
 
-        // Crear un canvas temporal para esta parte de la imagen
-        const tempCanvas = document.createElement('canvas');
-        const tempCtx = tempCanvas.getContext('2d');
-        tempCanvas.width = canvas.width;
-        tempCanvas.height = sourceHeight;
+      generatingSnackBar.dismiss();
+      const processingSnackBar = this.snackBar.open('Procesando gráficos...', '', {
+        duration: 0,
+        panelClass: ['info-snackbar']
+      });
 
-        if (tempCtx) {
-          tempCtx.drawImage(canvas, 0, sourceY, canvas.width, sourceHeight, 0, 0, canvas.width, sourceHeight);
-          const tempImgData = tempCanvas.toDataURL('image/png');
-          
-          pdf.addImage(tempImgData, 'PNG', 10, yPosition, imgWidth, heightToAdd);
+      // Procesar cada gráfico
+      for (let i = 0; i < chartConfigs.length; i++) {
+        const config = chartConfigs[i];
+        
+        // Actualizar mensaje de progreso
+        processingSnackBar.dismiss();
+        const currentProcessingSnackBar = this.snackBar.open(`Procesando gráfico ${i + 1} de ${chartConfigs.length}...`, '', {
+          duration: 0,
+          panelClass: ['info-snackbar']
+        });
+
+        const canvas = document.getElementById(config.id) as HTMLCanvasElement;
+        
+        if (canvas && canvas.width > 0 && canvas.height > 0) {
+          // Verificar si necesitamos una nueva página
+          if (yPosition + config.height + 20 > pdfHeight - margin) {
+            pdf.addPage();
+            yPosition = margin + 10;
+          }
+
+          // Agregar título del gráfico
+          pdf.setFontSize(12);
+          pdf.setFont('helvetica', 'bold');
+          pdf.setTextColor(0, 0, 0);
+          pdf.text(config.title, margin, yPosition);
+          yPosition += 8;
+
+          // Capturar el canvas del gráfico
+          const chartCanvas = await html2canvas(canvas, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff',
+            width: canvas.offsetWidth,
+            height: canvas.offsetHeight
+          });
+
+          if (chartCanvas && chartCanvas.width > 0 && chartCanvas.height > 0) {
+            const imgData = chartCanvas.toDataURL('image/png', 0.95);
+            
+            // Calcular dimensiones para el PDF
+            const maxWidth = pdfWidth - (margin * 2);
+            const maxHeight = config.height;
+            
+            const canvasAspectRatio = chartCanvas.width / chartCanvas.height;
+            let imgWidth = maxWidth;
+            let imgHeight = maxWidth / canvasAspectRatio;
+            
+            // Si la altura es mayor al máximo permitido, ajustar por altura
+            if (imgHeight > maxHeight) {
+              imgHeight = maxHeight;
+              imgWidth = maxHeight * canvasAspectRatio;
+            }
+
+            // Centrar la imagen horizontalmente
+            const xPosition = margin + (maxWidth - imgWidth) / 2;
+
+            // Agregar imagen al PDF
+            pdf.addImage(imgData, 'PNG', xPosition, yPosition, imgWidth, imgHeight);
+            yPosition += imgHeight + 15; // Espacio después del gráfico
+          }
         }
 
-        remainingHeight -= heightToAdd;
-        sourceY += sourceHeight;
-
-        if (remainingHeight > 0) {
-          pdf.addPage();
-          yPosition = 10;
-        }
+        currentProcessingSnackBar.dismiss();
       }
+
+      // Agregar pie de página en la última página
+      this.addPdfFooter(pdf, pdfWidth, pdfHeight);
 
       // Generar nombre del archivo con fecha y hora
       const now = new Date();
-      const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      const timestamp = now.toISOString()
+        .replace(/[:.]/g, '-')
+        .slice(0, 19);
       const fileName = `Dashboard_Accidentes_${timestamp}.pdf`;
 
       // Descargar el PDF
       pdf.save(fileName);
 
-      this.snackBar.open(`Reporte PDF generado exitosamente: ${fileName}`, 'Cerrar', {
+      this.snackBar.open(`✓ Reporte PDF generado exitosamente: ${fileName}`, 'Cerrar', {
         duration: 5000,
         panelClass: ['success-snackbar']
       });
 
     } catch (error) {
       console.error('Error al generar el reporte PDF:', error);
-      this.snackBar.open('Error al generar el reporte PDF', 'Cerrar', {
-        duration: 3000,
+      
+      let errorMessage = 'Error al generar el reporte PDF';
+      if (error instanceof Error) {
+        errorMessage = `Error: ${error.message}`;
+      }
+      
+      this.snackBar.open(errorMessage, 'Cerrar', {
+        duration: 5000,
         panelClass: ['error-snackbar']
       });
     } finally {
       this.isGeneratingReport = false;
+      // Asegurar que cualquier snackbar de progreso se cierre
+      this.snackBar.dismiss();
+    }
+  }
+
+  /**
+   * Espera a que todos los gráficos estén completamente renderizados
+   */
+  private async waitForChartsToRender(): Promise<void> {
+    const chartIds = [
+      'historicoAccidentesChart',
+      'tipoViaChart', 
+      'distritoChart',
+      'accidentesPorDiaChart',
+      'accidentesPorHoraChart',
+      'importanciaVariablesChart'
+    ];
+
+    // Esperar a que todos los canvas existan y tengan contenido
+    for (const chartId of chartIds) {
+      await this.waitForChart(chartId);
+    }
+
+    // Esperar un tiempo adicional para asegurar renderizado completo
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+
+  /**
+   * Espera a que un gráfico específico esté renderizado
+   */
+  private async waitForChart(chartId: string): Promise<void> {
+    return new Promise((resolve) => {
+      const checkChart = () => {
+        const canvas = document.getElementById(chartId) as HTMLCanvasElement;
+        
+        if (canvas && canvas.width > 0 && canvas.height > 0) {
+          // Verificar que el canvas tenga contenido visual
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const hasContent = imageData.data.some((pixel, index) => {
+              // Verificar si hay píxeles no blancos (considerando RGBA)
+              if (index % 4 === 3) return false; // Saltar canal alpha
+              return pixel !== 255; // No es blanco puro
+            });
+            
+            if (hasContent) {
+              resolve();
+              return;
+            }
+          }
+        }
+        
+        // Si el gráfico no está listo, esperar y reintentar
+        setTimeout(checkChart, 100);
+      };
+      
+      checkChart();
+    });
+  }
+
+  /**
+   * Agrega encabezado al PDF
+   */
+  private addPdfHeader(pdf: jsPDF, pdfWidth: number): void {
+    const currentDate = new Date().toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
+    const currentTime = new Date().toLocaleTimeString('es-ES', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    // Título principal
+    pdf.setFontSize(18);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(41, 128, 185); // Color azul
+    pdf.text('DASHBOARD DE ACCIDENTES DE TRÁNSITO', pdfWidth / 2, 15, { align: 'center' });
+    
+    // Subtítulo
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(0, 0, 0);
+    pdf.text(`Fecha: ${currentDate} - Hora: ${currentTime}`, pdfWidth / 2, 25, { align: 'center' });
+    
+    // Información de resumen
+    pdf.setFontSize(11);
+    pdf.text(`Total de accidentes registrados: ${this.totalAccidentes.toLocaleString()}`, pdfWidth / 2, 32, { align: 'center' });
+    
+    if (this.ultimoRegistro) {
+      const ultimaFecha = this.ultimoRegistro.toLocaleDateString('es-ES');
+      pdf.text(`Último registro: ${ultimaFecha}`, pdfWidth / 2, 38, { align: 'center' });
+    }
+
+    // Línea separadora
+    pdf.setLineWidth(0.5);
+    pdf.setDrawColor(200, 200, 200);
+    pdf.line(15, 42, pdfWidth - 15, 42);
+  }
+
+  /**
+   * Agrega pie de página al PDF
+   */
+  private addPdfFooter(pdf: jsPDF, pdfWidth: number, pdfHeight: number): void {
+    const footerY = pdfHeight - 10;
+    
+    // Obtener el número total de páginas
+    const pageCount = (pdf as any).internal.pages.length - 1; // -1 porque el primer elemento es metadata
+    
+    // Agregar pie de página a todas las páginas
+    for (let i = 1; i <= pageCount; i++) {
+      pdf.setPage(i);
+      
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'italic');
+      pdf.setTextColor(128, 128, 128);
+      
+      // Texto del pie centrado
+      const footerText = 'Generado automáticamente por el Sistema de Análisis de Accidentes';
+      pdf.text(footerText, pdfWidth / 2, footerY - 3, { align: 'center' });
+      
+      // Número de página a la derecha
+      if (pageCount > 1) {
+        pdf.text(`Página ${i} de ${pageCount}`, pdfWidth - 15, footerY, { align: 'right' });
+      }
+    }
+  }
+
+  /**
+   * Agrega imagen dividida en múltiples páginas
+   */
+  private async addMultiPageImage(
+    pdf: jsPDF, 
+    canvas: HTMLCanvasElement, 
+    imgData: string, 
+    margin: number, 
+    startY: number, 
+    imgWidth: number, 
+    imgHeight: number,
+    pdfHeight: number,
+    availableHeight: number
+  ): Promise<void> {
+    let yPosition = startY;
+    let remainingHeight = imgHeight;
+    let sourceY = 0;
+    let isFirstPage = true;
+
+    while (remainingHeight > 0) {
+      const pageHeight = isFirstPage ? availableHeight : pdfHeight - margin * 2;
+      const heightToAdd = Math.min(remainingHeight, pageHeight);
+      const sourceHeight = (heightToAdd * canvas.height) / imgHeight;
+
+      // Crear canvas temporal para esta sección
+      const tempCanvas = document.createElement('canvas');
+      const tempCtx = tempCanvas.getContext('2d');
+      
+      if (!tempCtx) {
+        throw new Error('No se pudo crear el contexto del canvas temporal');
+      }
+      
+      tempCanvas.width = canvas.width;
+      tempCanvas.height = sourceHeight;
+
+      // Dibujar la sección correspondiente
+      tempCtx.fillStyle = '#ffffff';
+      tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+      tempCtx.drawImage(canvas, 0, sourceY, canvas.width, sourceHeight, 0, 0, canvas.width, sourceHeight);
+      
+      const tempImgData = tempCanvas.toDataURL('image/png', 0.95);
+      
+      // Agregar al PDF
+      pdf.addImage(tempImgData, 'PNG', margin, yPosition, imgWidth, heightToAdd);
+
+      remainingHeight -= heightToAdd;
+      sourceY += sourceHeight;
+
+      if (remainingHeight > 0) {
+        pdf.addPage();
+        yPosition = margin;
+        isFirstPage = false;
+      }
     }
   }
 
