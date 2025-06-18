@@ -1036,7 +1036,9 @@ export class DashboardComponent implements OnInit {
         yPosition += 5;
       }
 
-      // Riesgo medio
+      // SECCIÓN DE RIESGO MEDIO DESHABILITADA
+      // Comentado para evitar que se corte en la página
+      /*
       if (districtAnalysis.distritosRiesgoMedio.length > 0) {
         pdf.setFontSize(12);
         pdf.setFont('helvetica', 'bold');
@@ -1055,25 +1057,26 @@ export class DashboardComponent implements OnInit {
         });
         yPosition += 5;
       }
+      */
 
       // Bajo riesgo
-      if (districtAnalysis.distritosBajoRiesgo.length > 0) {
-        pdf.setFontSize(12);
-        pdf.setFont('helvetica', 'bold');
-        pdf.setTextColor(34, 139, 34); // Color verde
-        pdf.text('BAJO RIESGO', 20, yPosition);
-        yPosition += 8;
+      // if (districtAnalysis.distritosBajoRiesgo.length > 0) {
+      //   pdf.setFontSize(12);
+      //   pdf.setFont('helvetica', 'bold');
+      //   pdf.setTextColor(34, 139, 34); // Color verde
+      //   pdf.text('BAJO RIESGO', 20, yPosition);
+      //   yPosition += 8;
         
-        pdf.setFontSize(10);
-        pdf.setFont('helvetica', 'normal');
-        pdf.setTextColor(0, 0, 0);
+      //   pdf.setFontSize(10);
+      //   pdf.setFont('helvetica', 'normal');
+      //   pdf.setTextColor(0, 0, 0);
         
-        districtAnalysis.distritosBajoRiesgo.forEach((distrito: DistritoRiesgo) => {
-          const texto = `• ${distrito.nombre}: ${distrito.accidentes} accidentes (${distrito.porcentaje.toFixed(1)}% del total)`;
-          pdf.text(texto, 25, yPosition);
-          yPosition += 5;
-        });
-      }
+      //   districtAnalysis.distritosBajoRiesgo.forEach((distrito: DistritoRiesgo) => {
+      //     const texto = `• ${distrito.nombre}: ${distrito.accidentes} accidentes (${distrito.porcentaje.toFixed(1)}% del total)`;
+      //     pdf.text(texto, 25, yPosition);
+      //     yPosition += 5;
+      //   });
+      // }
 
       // Nueva página para recomendaciones
       pdf.addPage();
@@ -1095,16 +1098,15 @@ export class DashboardComponent implements OnInit {
         '• Incrementar la presencia policial en horarios pico',
         '• Mejorar la señalización y semáforos',
         '• Realizar auditorías de seguridad vial',
-        '',
-        'PARA DISTRITOS DE RIESGO MEDIO:',
-        '• Monitoreo continuo de puntos críticos',
-        '• Campañas de concientización dirigidas',
-        '• Mejoras puntuales en infraestructura',
+        '• Instalar cámaras de vigilancia en puntos críticos',
+        '• Mejorar iluminación en intersecciones peligrosas',
         '',
         'MEDIDAS GENERALES:',
-        '• Análisis detallado de patrones temporales',
+        '• Análisis detallado de patrones temporales por distrito',
         '• Coordinación entre distritos para mejores prácticas',
-        '• Implementación de tecnología para monitoreo'
+        '• Implementación de tecnología para monitoreo en tiempo real',
+        '• Campañas de educación vial dirigidas a conductores',
+        '• Evaluación periódica de la efectividad de las medidas'
       ];
 
       recomendaciones.forEach(rec => {

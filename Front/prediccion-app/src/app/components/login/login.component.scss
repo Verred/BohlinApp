@@ -63,15 +63,49 @@ mat-form-field {
   }
 }
 
-// Estilos para snackbar
-::ng-deep {
-  .success-snackbar {
-    background-color: #4caf50 !important;
-    color: white !important;
-  }
+// Reemplaza los estilos existentes de snackbar con estos:
+::ng-deep .error-snackbar {
+  background: #f44336 !important;
   
-  .error-snackbar {
+  &,
+  & *,
+  .mat-mdc-snack-bar-container,
+  .mdc-snackbar__surface,
+  .mat-mdc-snack-bar-label,
+  .mdc-snackbar__label,
+  .mat-mdc-button,
+  .mat-mdc-snack-bar-action {
+    background: #f44336 !important;
     background-color: #f44336 !important;
     color: white !important;
+    border: none !important;
+  }
+  
+  .mat-mdc-snack-bar-container,
+  .mdc-snackbar__surface {
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3) !important;
+  }
+}
+
+::ng-deep .success-snackbar {
+  background: #4caf50 !important;
+  
+  &,
+  & *,
+  .mat-mdc-snack-bar-container,
+  .mdc-snackbar__surface,
+  .mat-mdc-snack-bar-label,
+  .mdc-snackbar__label {
+    background: #4caf50 !important;
+    background-color: #4caf50 !important;
+    color: white !important;
+    border: none !important;
+  }
+  
+  .mat-mdc-snack-bar-container,
+  .mdc-snackbar__surface {
+    border-radius: 8px !important;
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3) !important;
   }
 }

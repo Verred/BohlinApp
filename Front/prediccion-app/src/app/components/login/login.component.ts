@@ -82,15 +82,31 @@ export class LoginComponent {
           console.error('Error en login:', error);
           
           let errorMessage = 'Error de conexión. Intente nuevamente.';
-          if (error.status === 401) {
+          
+          // Manejo específico para errores de validación
+          if (error.status === 400) {
+            if (error.error?.message) {
+              errorMessage = error.error.message;
+            }
+            // Si hay errores específicos de campos
+            if (error.error?.errors?.non_field_errors) {
+              errorMessage = error.error.errors.non_field_errors[0] || 'Credenciales incorrectas';
+            }
+            // Mensaje genérico para error 400
+            if (errorMessage === 'Datos inválidos') {
+              errorMessage = 'Credenciales inválidas';
+            }
+          } else if (error.status === 401) {
             errorMessage = 'Credenciales incorrectas';
           } else if (error.error?.detail) {
             errorMessage = error.error.detail;
           }
           
-          this.snackBar.open(errorMessage, 'Cerrar', {
-            duration: 3000,
-            panelClass: ['error-snackbar']
+          this.snackBar.open(`⚠️ ${errorMessage}`, '✖', {
+            duration: 5000,
+            panelClass: ['error-snackbar'],
+            horizontalPosition: 'center',
+            verticalPosition: 'top'
           });
         }
       });
